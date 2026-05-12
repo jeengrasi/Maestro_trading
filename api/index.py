@@ -1,139 +1,150 @@
 from fastapi import FastAPI, Request, HTTPException
 from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest, StopLossRequest, TakeProfitRequest
-from alpaca.trading.enums import OrderSide, TimeInForce, OrderClass
-from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.data.requests import StockLatestQuoteRequest, StockBarsRequest
-from alpaca.data.timeframe import TimeFrame
+from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce
 import os
 import httpx
 import logging
-import json
 from datetime import datetime
-from typing import Optional
+from api.config import Config  # Importamos tu configuración personalizada
 
+# Configuración de Logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
-# VARIABLES DE ENTORNO
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY")
-ALPACA_PAPER = os.environ.get("ALPACA_PAPER", "true").lower() == "true"
-TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-TG_CHAT = os.environ.get("TELEGRAM_CHAT_ID")
-M2M_SECRET = os.environ.get("MAESTRO_M2M_SECRET")
-KV_URL = os.environ.get("KV_REST_API_URL")
-KV_TOKEN = os.environ.get("KV_REST_API_TOKEN")
+# --- INSTANCIAS DE CLIENTES ---
+# Usamos las variables centralizadas en Config
+alpaca_client = TradingClient(Config.ALPACA_API_KEY, Config.ALPACA_SECRET_KEY, paper=Config.ALPACA_PAPER)
 
 # --- HELPERS TELEGRAM ---
-async def send_telegram_return_id(text: str):
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+async def send_telegram(text: str):
+    url = f"https://api.telegram.org/bot{Config.TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": Config.TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"}
     async with httpx.AsyncClient() as client:
-        r = await client.post(url, json={"chat_id": TG_CHAT, "text": text, "parse_mode": "Markdown"})
+        r = await client.post(url, json=payload)
         return r.json().get("result", {})
 
 async def edit_telegram(msg_id: int, text: str):
     if not msg_id: return
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/editMessageText"
+    url = f"https://api.telegram.org/bot{Config.TELEGRAM_BOT_TOKEN}/editMessageText"
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(url, json={"chat_id": TG_CHAT, "message_id": msg_id, "text": text, "parse_mode": "Markdown"})
+            await client.post(url, json={
+                "chat_id": Config.TELEGRAM_CHAT_ID, 
+                "message_id": msg_id, 
+                "text": text, 
+                "parse_mode": "Markdown"
+            })
     except Exception as e:
         logger.error(f"Error editando TG: {e}")
 
-# --- HELPERS MEMORIA (KV) ---
+# --- HELPERS UPSTASH (REDIS KV) ---
+# Se corrigieron las cabeceras para usar el Token de Upstash
+async def kv_command(method: str, endpoint: str, data: dict = None):
+    headers = {"Authorization": f"Bearer {os.getenv('KV_REST_API_TOKEN')}"}
+    url = f"{Config.REDIS_URL}{endpoint}"
+    async with httpx.AsyncClient() as client:
+        if method == "POST":
+            r = await client.post(url, headers=headers, json=data)
+        else:
+            r = await client.get(url, headers=headers)
+        return r.json().get("result")
+
 async def kv_add_history(event: str):
     today = datetime.now().strftime("%Y-%m-%d")
     key = f"history:{today}"
     log_line = f"{datetime.now().strftime('%H:%M:%S')} - {event}"
-    async with httpx.AsyncClient() as client:
-        # Añade a la lista y mantiene solo los últimos 10
-        await client.post(f"{KV_URL}/lpush/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"element": log_line})
-        await client.post(f"{KV_URL}/ltrim/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"start": 0, "stop": 9})
-        await client.post(f"{KV_URL}/expire/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"seconds": 86400})
+    await kv_command("POST", f"/lpush/{key}", {"element": log_line})
+    await kv_command("POST", f"/ltrim/{key}", {"start": 0, "stop": 9})
+    await kv_command("POST", f"/expire/{key}", {"seconds": 86400})
 
-async def kv_get_history() -> str:
-    today = datetime.now().strftime("%Y-%m-%d")
-    key = f"history:{today}"
-    async with httpx.AsyncClient() as client:
-        r = await client.post(f"{KV_URL}/lrange/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"start": 0, "stop": 9})
-        events = r.json().get("result", [])
-        return "\n".join([f"• {e}" for e in events]) if events else "Sin eventos hoy."
+# --- LÓGICA DE EJECUCIÓN ---
+async def ejecutar_orden_alpaca(ticker: str, side: str):
+    try:
+        # Calcular cantidad basada en RISK_PER_TRADE (ej: 0.01 = 1% de la cuenta)
+        account = alpaca_client.get_account()
+        equity = float(account.equity)
+        monto_a_invertir = equity * Config.RISK_PER_TRADE
+        
+        # Obtener precio actual para calcular acciones
+        # Nota: Simplificado para Market Order
+        order_data = MarketOrderRequest(
+            symbol=ticker,
+            notional=monto_a_invertir, # Compra por dólares, no por acciones
+            side=OrderSide.BUY if side == "BUY" else OrderSide.SELL,
+            time_in_force=TimeInForce.GTC
+        )
+        
+        order = alpaca_client.submit_order(order_data)
+        return True, order.id
+    except Exception as e:
+        logger.error(f"Error Alpaca: {e}")
+        return False, str(e)
 
-async def kv_sadd(key: str, member: str):
-    async with httpx.AsyncClient() as client:
-        await client.post(f"{KV_URL}/sadd/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"member": member})
-        await client.post(f"{KV_URL}/expire/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"}, json={"seconds": 300})
-
-async def kv_scard(key: str) -> int:
-    async with httpx.AsyncClient() as client:
-        r = await client.get(f"{KV_URL}/scard/{key}", headers={"Authorization": f"Bearer {KV_TOKEN}"})
-        return int(r.json().get("result", 0))
-
-# --- VALIDACIÓN TÉCNICA ---
-async def check_3lock_antispike(ticker: str):
-    # Simulación lógica para el test: Si el ticker es SPY, forzamos un análisis real
-    return True, "VERDE"
-
-# --- ENDPOINT ESTRATEGIA (EL MONITOR) ---
+# --- ENDPOINT ESTRATEGIA ---
 @app.post("/strategy")
 async def strategy_hub(req: Request):
     data = await req.json()
-    if data.get("api_key") != M2M_SECRET: return {"status": "unauthorized"}
+    
+    # Validación de Seguridad M2M
+    if data.get("api_key") != os.getenv("MAESTRO_M2M_SECRET"):
+        return {"status": "unauthorized"}
 
-    source = data.get("source")
     ticker = data.get("ticker", "").upper()
-    bias = data.get("bias", "").upper()
+    bias = data.get("bias", "").upper() # BUY o SELL
+    vix_actual = float(data.get("vix", 0))
 
-    # Iniciar flujo visual en Telegram
-    res = await send_telegram_return_id(f"📡 *MONITOR:* Señal de {source}\n🔍 *Activo:* {ticker} {bias}\n⏳ *Estado:* Validando...")
+    # 1. Filtro de Seguridad VIX
+    if vix_actual > Config.MAX_VIX:
+        await send_telegram(f"⚠️ *VETO VIX:* {ticker} cancelado.\nVIX Actual: `{vix_actual}`\nLímite: `{Config.MAX_VIX}`")
+        return {"status": "vix_veto"}
+
+    # 2. Iniciar flujo en Telegram
+    res = await send_telegram(f"📡 *MONITOR:* Señal detectada\n🔍 *Activo:* {ticker} | *Bias:* {bias}\n⏳ *Estado:* Validando Consenso...")
     msg_id = res.get("message_id")
-    await kv_add_history(f"SEÑAL {source}: {ticker}")
 
-    # Simular pensamiento de Meta AI
-    await edit_telegram(msg_id, f"📡 *MONITOR:* {ticker}\n⏳ *Meta AI:* Analizando técnica...")
-    
-    # Aquí iría el check real
-    tech_ok, tech_msg = await check_3lock_antispike(ticker)
-    
-    if not tech_ok:
-        await edit_telegram(msg_id, f"📡 *MONITOR:* {ticker}\n🛡️ *VETO:* {tech_msg}")
-        await kv_add_history(f"VETO {ticker}: {tech_msg}")
-        return {"status": "veto"}
-
-    # Consenso
+    # 3. Consenso en Redis (Necesita 2 votos de diferentes fuentes)
+    source = data.get("source", "IA_Unknown")
     signal_key = f"signal:{ticker}:{bias}"
-    await kv_sadd(signal_key, source)
-    voters = await kv_scard(signal_key)
+    
+    await kv_command("POST", f"/sadd/{signal_key}", {"member": source})
+    await kv_command("POST", f"/expire/{signal_key}", {"seconds": 300})
+    voters = int(await kv_command("GET", f"/scard/{signal_key}") or 0)
 
     if voters >= 2:
-        await edit_telegram(msg_id, f"🎯 *CONSENSO:* {ticker}\n✅ *EJECUTANDO COMPRA...*")
-        await kv_add_history(f"EJECUTADO {ticker}")
-        # Aquí se llama a la ejecución real de Alpaca
-        await edit_telegram(msg_id, f"🤖 *AUTO-EJECUTADO:* {ticker}\n💰 Operación en Paper Trading exitosa.")
+        await edit_telegram(msg_id, f"🎯 *CONSENSO ALCANZADO* ({voters}/2)\n🚀 Ejecutando orden en Alpaca...")
+        
+        success, info = await ejecutar_orden_alpaca(ticker, bias)
+        
+        if success:
+            await edit_telegram(msg_id, f"✅ *ORDEN COMPLETADA*\n📈 {ticker} {bias}\n💰 Riesgo: {Config.RISK_PER_TRADE * 100}%\n🆔 ID: `{info}`")
+            await kv_add_history(f"EJECUTADO: {ticker} {bias}")
+        else:
+            await edit_telegram(msg_id, f"❌ *ERROR ALPACA*\n`{info}`")
     else:
-        await edit_telegram(msg_id, f"📡 *MONITOR:* {ticker}\n⏳ *Votos:* {voters}/2. Esperando segunda IA...")
+        await edit_telegram(msg_id, f"📡 *MONITOR:* {ticker}\n⏳ *Votos:* {voters}/2. Esperando confirmación...")
 
-    return {"status": "processed"}
+    return {"status": "ok", "voters": voters}
 
-# --- WEBHOOK PARA COMANDOS ---
+# --- COMANDOS TELEGRAM ---
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
-    text = data.get("message", {}).get("text", "")
+    message = data.get("message", {})
+    text = message.get("text", "")
     
     if text == "/balance":
-        alpaca = TradingClient(ALPACA_KEY, ALPACA_SECRET, paper=ALPACA_PAPER)
-        acc = alpaca.get_account()
-        await send_telegram_return_id(f"💰 *Equity:* ${float(acc.equity):,.2f}\n📊 *Modo:* Full Auto")
+        acc = alpaca_client.get_account()
+        modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
+        await send_telegram(f"📊 *CUENTA ALPACA ({modo})*\n\n💵 *Equity:* ${float(acc.equity):,.2f}\n💸 *Buying Power:* ${float(acc.buying_power):,.2f}")
         
-    if text == "/history":
-        hist = await kv_get_history()
-        await send_telegram_return_id(f"📜 *HISTORIAL DE HOY:*\n{hist}")
+    if text == "/start":
+        await send_telegram(f"🤖 *Maestro AI Online*\n\nConfiguración actual:\n• VIX Máximo: `{Config.MAX_VIX}`\n• Riesgo: `{Config.RISK_PER_TRADE * 100}%`")
         
     return {"ok": True}
 
 @app.get("/")
 async def root():
-    return {"status": "Maestro AI Online"}
+    return {"status": "Maestro AI Online", "vix_limit": Config.MAX_VIX}
