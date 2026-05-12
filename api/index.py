@@ -1,47 +1,57 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
 from alpaca.trading.client import TradingClient
 import os
-import logging
-
-# Configuración de logs para ver en Vercel Dashboard
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import asyncio
+import telegram
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 app = FastAPI()
 
-def get_trading_client():
-    # Leemos las variables DENTRO de la función, no fuera.
-    key = os.environ.get("ALPACA_API_KEY")
-    secret = os.environ.get("ALPACA_SECRET_KEY")
-    paper = os.environ.get("ALPACA_PAPER", "true").lower() == "true"
-    
-    if not key or not secret:
-        logger.error(f"Error de ENV: KEY presente: {bool(key)}, SECRET presente: {bool(secret)}")
-        raise ValueError("Faltan credenciales de Alpaca en os.environ")
-    
-    return TradingClient(key, secret, paper=paper), paper
+# --- CONFIGURACIÓN ---
+def get_env():
+    return {
+        "key": os.environ.get("ALPACA_API_KEY"),
+        "secret": os.environ.get("ALPACA_SECRET_KEY"),
+        "paper": os.environ.get("ALPACA_PAPER", "true").lower() == "true",
+        "token": os.environ.get("TELEGRAM_BOT_TOKEN"),
+        "chat_id": os.environ.get("TELEGRAM_CHAT_ID")
+    }
 
+# --- LÓGICA DE ALPACA ---
+def get_balance():
+    env = get_env()
+    client = TradingClient(env["key"], env["secret"], paper=env["paper"])
+    account = client.get_account()
+    return float(account.cash)
+
+# --- ENDPOINTS WEB ---
 @app.get("/")
 async def root():
+    env = get_env()
     try:
-        alpaca, is_paper = get_trading_client()
-        account = alpaca.get_account()
-        return {
-            "status": "Maestro AI Online",
-            "mode": "Paper Trading" if is_paper else "Live",
-            "cash": float(account.cash),
-            "currency": account.currency
-        }
+        cash = get_balance()
+        # Intentar enviar mensaje de prueba al iniciar
+        if env["token"] and env["chat_id"]:
+            bot = telegram.Bot(token=env["token"])
+            await bot.send_message(chat_id=env["chat_id"], text=f"✅ Maestro AI Conectado\n💰 Saldo inicial: ${cash:,.2f}")
+        return {"status": "Online", "cash": cash}
     except Exception as e:
-        logger.error(f"Fallo en root: {str(e)}")
         return {"status": "Error", "detail": str(e)}
 
-# ENDPOINT DE PRUEBA: Para ver qué variables detecta Vercel (borrar después de probar)
-@app.get("/debug-env")
-async def debug_env():
-    # Solo mostramos las llaves (keys), NO los valores por seguridad
-    return {
-        "keys_detected": list(os.environ.keys()),
-        "python_version": os.sys.version,
-        "api_key_found": "ALPACA_API_KEY" in os.environ
-    }
+# --- WEBHOOK PARA TELEGRAM ---
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    env = get_env()
+    bot = telegram.Bot(token=env["token"])
+    data = await request.json()
+    update = Update.de_json(data, bot)
+    
+    if update.message and update.message.text == "/status":
+        cash = get_balance()
+        await bot.send_message(
+            chat_id=env["chat_id"], 
+            text=f"📊 *Estado Actual*\n\n💰 Disponible: ${cash:,.2f}\n🚀 Modo: {'Paper' if env['paper'] else 'Real'}",
+            parse_mode="Markdown"
+        )
+    return {"ok": True}
