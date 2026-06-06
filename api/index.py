@@ -64,6 +64,10 @@ async def health():
         "latency_ms": round(latency, 2)
     }
 
+@app.get("/webhook")
+async def webhook_verification():
+    return {"status": "ok"}
+
 async def send_telegram(text: str):
     url = f"https://api.telegram.org/bot{Config.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {"chat_id": Config.TELEGRAM_CHAT_ID, "text": text, "parse_mode": "Markdown"}
