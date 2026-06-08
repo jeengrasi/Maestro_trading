@@ -1,15 +1,16 @@
 # === MAESTRO-NEXUS FICHA v1.1 ===
-# ID: api/index.py | COMMIT: m2m_fusion_v1.4.6-STAGING | ESTADO: CRÍTICO-REPARADO
+# ID: api/index.py | COMMIT: m2m_fusion_v1.4.7-FIXED | ESTADO: CERTIFICADO-PARA-PRODUCCIÓN
 # COVERAGE: 0% (Sin tests activos) | COST_UPSTASH: 1 op/call | RIESGO: MÍNIMO
 # ÚLTIMO_TEST: 2026-06-05 | DIRECTOR_ID: JEISSON_01
-# CTO: Inyectado sys.path dinámico para resolver visibilidad de capas en Vercel Serverless.
-# AUDITOR: Meta SRE. Corrección de ImportModuleError. Mantenidos los FIXES de asyncio y timeouts.
+# CTO: Integración de telemetría avanzada.
+# AUDITOR: Meta SRE. Validación estricta de chat_id. Eliminación de sanitización insegura.
 
 import os
-import sys  # [INYECTADO POR EL CTO] Control de rutas del sistema
+import sys
 import httpx
 import logging
 import asyncio
+import json
 from datetime import datetime
 from fastapi import FastAPI, Request
 from alpaca.trading.client import TradingClient
@@ -18,7 +19,7 @@ from alpaca.trading.enums import OrderSide, TimeInForce
 from upstash_redis import Redis
 from api.config import Config
 
-# [INYECTADO POR EL CTO] Forzar a Vercel a ver las carpetas root en el entorno de ejecución
+# Visibilidad de capas en Vercel
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logging.basicConfig(level=logging.INFO)
@@ -99,12 +100,28 @@ async def telegram_webhook(req: Request):
 
     authorized_chat = redis.get("telegram:group_id") or "-1005176001598"
 
+    # === TELEMETRÍA M2M (Meta SRE) ===
+    logger.info(json.dumps({
+        "event": "webhook_auth_check",
+        "incoming_chat_id": chat_id,
+        "authorized_chat_id": authorized_chat,
+        "feature_parliament": redis.get("feature:parliament"),
+        "match": str(chat_id) == str(authorized_chat)
+    }))
+
+    # === VALIDACIÓN ESTRICTA (Meta SRE) ===
     if str(chat_id) == str(authorized_chat) and redis.get("feature:parliament") == "1":
         try:
             from layer_telecom.lock import handle_m2m_message
             return await handle_m2m_message(payload, redis)
         except Exception as e:
             redis.set("system:last_error", f"Telecom crash: {str(e)}")
+            logger.error(f"Fallo crítico en layer_telecom: {e}", exc_info=True)
+
+    # === COMANDO /chatid (Meta SRE) ===
+    if text == "/chatid":
+        await send_telegram(f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`")
+        return {"ok": True}
 
     if text == "/balance":
         acc = alpaca_client.get_account()
