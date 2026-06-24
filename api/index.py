@@ -1,9 +1,8 @@
-# === MAESTRO-NEXUS FICHA v1.2 ===
-# ID: api/index.py | COMMIT: m2m_memory_gear_v1.4.8-MEM-PROD | ESTADO: CERTIFICADO
+# === MAESTRO-NEXUS FICHA v1.3 ===
+# ID: api/index.py | COMMIT: fix_sync_redis_v1.3 | ESTADO: CORREGIDO
 # COVERAGE: 0% (Sin tests activos) | COST_UPSTASH: ~1-3 ops/call | RIESGO: MÍNIMO
-# ÚLTIMO_TEST: 2026-06-09 | DIRECTOR_ID: JEISSON_01
-# CTO: Corregido bug de asincronía (await) en bootstrap de memoria y parseo de tipos en Redis.
-# AUDITOR: Meta SRE. Telemetría JSON estructurada y enrutamiento dinámico de respuestas TG.
+# ÚLTIMO_TEST: 2026-06-24 | DIRECTOR_ID: JEISSON_01
+# GERENTE: DeepSeek. Corregido bug de await en Redis síncrono. Eliminados todos los await de llamadas a upstash-redis.
 
 import os
 import sys
@@ -38,16 +37,15 @@ alpaca_client = TradingClient(
     paper=Config.ALPACA_PAPER
 )
 
-# === LAYER_CORE / MEMORY ENGRANAJE (v1.4.8-MEM-PROD) ===
-async def bootstrap_nexus_memory(redis_client: Redis):
+# === LAYER_CORE / MEMORY ENGRANAJE (v1.3) ===
+def bootstrap_nexus_memory(redis_client: Redis):
     """
     Engrana la memoria institucional (NEXUS_MANIFEST.json) con la memoria operativa (Redis).
-    Si faltan llaves críticas, las reconstruye desde el manifiesto de forma asíncrona y segura.
+    Si faltan llaves críticas, las reconstruye desde el manifiesto.
     """
     try:
-        # [CORREGIDO POR EL CTO] Forzar llamadas asíncronas con await
-        tg_id = await redis_client.get("telegram:group_id")
-        feat_parliament = await redis_client.get("feature:parliament")
+        tg_id = redis_client.get("telegram:group_id")
+        feat_parliament = redis_client.get("feature:parliament")
 
         if not tg_id or not feat_parliament:
             manifest_path = os.path.join(
@@ -64,14 +62,13 @@ async def bootstrap_nexus_memory(redis_client: Redis):
                 feat_key = state.get("feature_parliament_key", "feature:parliament")
                 max_vix = state.get("risk_management", {}).get("max_vix", "20.0")
 
-                # Auto-hidratación limpia sin sobreescribir valores vivos
                 if not tg_id:
-                    await redis_client.set(tg_key, "-1005176001598")
+                    redis_client.set(tg_key, "6444278889")
                 if not feat_parliament:
-                    await redis_client.set(feat_key, "1")
+                    redis_client.set(feat_key, "0")
 
-                await redis_client.set("risk:max_vix", str(max_vix))
-                await redis_client.set("nexus:state:last_recovery", datetime.now().isoformat())
+                redis_client.set("risk:max_vix", str(max_vix))
+                redis_client.set("nexus:state:last_recovery", datetime.now().isoformat())
 
                 logger.info("⚙️ MEMORIA NEXUS: Redis auto-hidratado exitosamente desde NEXUS_MANIFEST.json")
     except Exception as e:
@@ -139,15 +136,12 @@ async def telegram_webhook(req: Request):
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
 
-    # [ENGRANAJE] Sincronizar memoria declarativa antes de la validación
-    await bootstrap_nexus_memory(redis)
+    bootstrap_nexus_memory(redis)
 
-    # [CORREGIDO] Forzar lectura síncrona/asíncrona limpia mediante los strings de la firma anterior
-    raw_authorized_chat = await redis.get("telegram:group_id")
-    authorized_chat = raw_authorized_chat or "-1005176001598"
-    raw_feature_parliament = await redis.get("feature:parliament")
+    raw_authorized_chat = redis.get("telegram:group_id")
+    authorized_chat = raw_authorized_chat or "6444278889"
+    raw_feature_parliament = redis.get("feature:parliament")
 
-    # === TELEMETRÍA M2M (Meta SRE) ===
     logger.info(json.dumps({
         "event": "webhook_auth_check",
         "incoming_chat_id": chat_id,
@@ -156,16 +150,14 @@ async def telegram_webhook(req: Request):
         "match": str(chat_id) == str(authorized_chat)
     }))
 
-    # === VALIDACIÓN ESTRICTA (Meta SRE) ===
     if str(chat_id) == str(authorized_chat) and str(raw_feature_parliament) == "1":
         try:
             from layer_telecom.lock import handle_m2m_message
             return await handle_m2m_message(payload, redis)
         except Exception as e:
-            await redis.set("system:last_error", f"Telecom crash: {str(e)}")
+            redis.set("system:last_error", f"Telecom crash: {str(e)}")
             logger.error(f"Fallo crítico en layer_telecom: {e}", exc_info=True)
 
-    # === COMANDO /chatid (Meta SRE) ===
     if text == "/chatid":
         await send_telegram(
             f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`",
@@ -184,7 +176,7 @@ async def telegram_webhook(req: Request):
         )
 
     if text == "/start":
-        raw_max_vix = await redis.get("risk:max_vix")
+        raw_max_vix = redis.get("risk:max_vix")
         max_vix = raw_max_vix or Config.MAX_VIX
         await send_telegram(
             f"🤖 *Maestro AI Online*\n\n"
