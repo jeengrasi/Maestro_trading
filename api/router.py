@@ -1,7 +1,7 @@
-# === MAESTRO-NEXUS FICHA v1.4 ===
-# ID: api/router.py | COMMIT: free_models_v1.4 | ESTADO: CORREGIDO
-# GERENTE: DeepSeek. Stack 100% gratuito con modelos verificados en OpenRouter.
-# CAMBIO: Solo se reemplazaron los nombres de modelos. El resto del código es idéntico a v1.3.
+# === MAESTRO-NEXUS FICHA v1.5 ===
+# ID: api/router.py | COMMIT: verified_models_v1.5 | ESTADO: CORREGIDO POR MESA
+# GERENTE: DeepSeek. Stack verificado con modelos reales de OpenRouter.
+# CORRECCIÓN: Nombres de modelos validados por Copilot y Gemini.
 
 import os
 import httpx
@@ -17,9 +17,7 @@ if not OPENROUTER_API_KEY:
     logger.error("OPENROUTER_API_KEY no está configurada en Vercel.")
     raise RuntimeError("OPENROUTER_API_KEY no configurada. El Parlamento no puede iniciar.")
 
-# === SANITIZACIÓN DE PROMPTS ===
 def sanitize_prompt(text: str) -> str:
-    """Limpia el mensaje de instrucciones peligrosas o loops."""
     forbidden = [
         "ignora las instrucciones anteriores",
         "ignore previous instructions",
@@ -31,57 +29,55 @@ def sanitize_prompt(text: str) -> str:
         cleaned = cleaned.replace(phrase, "")
     return cleaned.strip()
 
-# === STACK PARLAMENTARIO (MODELOS 100% GRATUITOS VERIFICADOS) ===
+# === STACK PARLAMENTARIO (MODELOS VERIFICADOS EN OPENROUTER) ===
 PARLIAMENT_STACK = {
     "gerente": {
-        "model": "nvidia/nemotron-3-super",
+        "model": "google/gemini-2.0-flash-thinking-exp",
         "role": "Gerente General",
         "system_prompt": (
-            "Eres el Gerente General del Parlamento Nexus IA, un sistema autónomo de trading. "
-            "Tu función es moderar debates, analizar las posturas de las IAs especialistas "
-            "y emitir una recomendación final clara y concisa. "
+            "Eres el Gerente General del Parlamento Nexus IA. "
+            "Moderas debates, analizas posturas de IAs especialistas "
+            "y emites una recomendación final clara y concisa. "
+            "Responde siempre en español."
+        ),
+        "timeout": 40.0
+    },
+    "auditor": {
+        "model": "deepseek/deepseek-r1",
+        "role": "Auditor Técnico",
+        "system_prompt": (
+            "Eres el Auditor Técnico del Parlamento Nexus IA. "
+            "Revisas código Python, detectas errores, validas cambios "
+            "y aseguras el cumplimiento de la Constitución Nexus. "
             "Responde siempre en español."
         ),
         "timeout": 30.0
     },
-    "auditor": {
-        "model": "google/gemma-4-31b",
-        "role": "Auditor Técnico",
-        "system_prompt": (
-            "Eres el Auditor Técnico del Parlamento Nexus IA. "
-            "Tu función es revisar código Python, detectar errores, validar cambios "
-            "y asegurar que las propuestas cumplen con la Constitución Nexus. "
-            "Responde siempre en español."
-        ),
-        "timeout": 25.0
-    },
     "estratega": {
-        "model": "google/gemma-4-26b-a4b",
+        "model": "qwen/qwen-2.5-72b-instruct",
         "role": "Estratega de Mercado",
         "system_prompt": (
             "Eres el Estratega de Mercado del Parlamento Nexus IA. "
-            "Tu función es analizar oportunidades de inversión, evaluar riesgos macroeconómicos "
-            "y recomendar acciones basadas en datos. "
+            "Analizas oportunidades de inversión, evalúas riesgos macroeconómicos "
+            "y recomiendas acciones basadas en datos. "
             "Responde siempre en español."
         ),
-        "timeout": 25.0
+        "timeout": 30.0
     },
     "guardian": {
-        "model": "cohere/north-mini-code",
+        "model": "meta-llama/llama-3.3-70b-instruct",
         "role": "Guardián Documental",
         "system_prompt": (
             "Eres el Guardián Documental del Parlamento Nexus IA. "
-            "Tu función es leer documentos del proyecto, verificar trazabilidad, "
-            "citar fuentes y proveer memoria institucional. "
+            "Lees documentos del proyecto, verificas trazabilidad, "
+            "citas fuentes y provees memoria institucional. "
             "Responde siempre en español."
         ),
-        "timeout": 25.0
+        "timeout": 30.0
     }
 }
 
 async def call_ia(role: str, message: str) -> str:
-    """Llama a una IA del Parlamento a través de OpenRouter."""
-    
     config = PARLIAMENT_STACK.get(role)
     if not config:
         return f"Error: Rol '{role}' no encontrado en el Parlamento."
@@ -98,7 +94,11 @@ async def call_ia(role: str, message: str) -> str:
         "messages": [
             {"role": "system", "content": config["system_prompt"]},
             {"role": "user", "content": message}
-        ]
+        ],
+        "provider": {
+            "order": ["Groq", "Together", "DeepInfra", "OpenRouter"],
+            "allow_fallbacks": True
+        }
     }
     
     try:
@@ -121,17 +121,15 @@ async def call_ia(role: str, message: str) -> str:
                 return f"Error: Sin créditos en OpenRouter."
             else:
                 logger.error(f"Error {config['model']}: {response.status_code} - {response.text}")
-                return f"Error: {config['role']} no está disponible. Código: {response.status_code}"
+                return f"Error: {config['role']} no disponible. Código: {response.status_code}"
     except httpx.TimeoutException:
         logger.error(f"Timeout al llamar a {config['model']}")
-        return f"Error: {config['role']} tardó demasiado en responder."
+        return f"Error: {config['role']} tardó demasiado."
     except Exception as e:
         logger.error(f"Excepción al llamar a {config['role']}: {e}")
         return f"Error: No se pudo contactar a {config['role']}."
 
 async def handle_parliament_debate(message: str) -> dict:
-    """Ejecuta un debate completo entre todas las IAs del Parlamento en PARALELO."""
-    
     results = {}
     roles_to_call = [r for r in PARLIAMENT_STACK.keys() if r != "gerente"]
     tasks = [call_ia(role, message) for role in roles_to_call]
@@ -148,12 +146,10 @@ async def handle_parliament_debate(message: str) -> dict:
     return results
 
 async def get_manager_recommendation(message: str, responses: dict) -> str:
-    """Obtiene la recomendación final del Gerente basada en las respuestas de todas las IAs."""
-    
     context = "Debate Parlamentario Nexus IA:\n\n"
     for role, data in responses.items():
         context += f"{data['role']} ({data['model']}):\n{data['response']}\n\n"
     
-    prompt = f"{context}\nComo Gerente General del Parlamento Nexus IA, basado en estas posturas, emite tu recomendación final y conclusión."
+    prompt = f"{context}\nComo Gerente General, basado en estas posturas, emite tu recomendación final."
     
     return await call_ia("gerente", prompt)
