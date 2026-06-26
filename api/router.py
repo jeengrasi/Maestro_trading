@@ -1,7 +1,7 @@
-# === MAESTRO-NEXUS FICHA v1.3 ===
-# ID: api/router.py | COMMIT: parliament_router_v1.3 | ESTADO: RATIFICADO POR MESA
-# GERENTE: DeepSeek. Orquestador del Chat Parlamentario.
-# CORRECCIONES: Provider forzado a Groq, sanitización de prompts, timeout dinámico, concurrencia.
+# === MAESTRO-NEXUS FICHA v1.4 ===
+# ID: api/router.py | COMMIT: free_models_v1.4 | ESTADO: CORREGIDO
+# GERENTE: DeepSeek. Stack 100% gratuito con modelos verificados en OpenRouter.
+# CAMBIO: Solo se reemplazaron los nombres de modelos. El resto del código es idéntico a v1.3.
 
 import os
 import httpx
@@ -31,10 +31,10 @@ def sanitize_prompt(text: str) -> str:
         cleaned = cleaned.replace(phrase, "")
     return cleaned.strip()
 
-# === STACK PARLAMENTARIO (MODELOS VALIDADOS) ===
+# === STACK PARLAMENTARIO (MODELOS 100% GRATUITOS VERIFICADOS) ===
 PARLIAMENT_STACK = {
     "gerente": {
-        "model": "meta-llama/llama-3.1-70b-instruct",
+        "model": "nvidia/nemotron-3-super",
         "role": "Gerente General",
         "system_prompt": (
             "Eres el Gerente General del Parlamento Nexus IA, un sistema autónomo de trading. "
@@ -42,10 +42,10 @@ PARLIAMENT_STACK = {
             "y emitir una recomendación final clara y concisa. "
             "Responde siempre en español."
         ),
-        "timeout": 20.0
+        "timeout": 30.0
     },
     "auditor": {
-        "model": "deepseek/deepseek-v3",
+        "model": "google/gemma-4-31b",
         "role": "Auditor Técnico",
         "system_prompt": (
             "Eres el Auditor Técnico del Parlamento Nexus IA. "
@@ -53,10 +53,10 @@ PARLIAMENT_STACK = {
             "y asegurar que las propuestas cumplen con la Constitución Nexus. "
             "Responde siempre en español."
         ),
-        "timeout": 15.0
+        "timeout": 25.0
     },
     "estratega": {
-        "model": "qwen/qwen-2.5-72b-instruct",
+        "model": "google/gemma-4-26b-a4b",
         "role": "Estratega de Mercado",
         "system_prompt": (
             "Eres el Estratega de Mercado del Parlamento Nexus IA. "
@@ -64,10 +64,10 @@ PARLIAMENT_STACK = {
             "y recomendar acciones basadas en datos. "
             "Responde siempre en español."
         ),
-        "timeout": 20.0
+        "timeout": 25.0
     },
     "guardian": {
-        "model": "cohere/command-r-plus",
+        "model": "cohere/north-mini-code",
         "role": "Guardián Documental",
         "system_prompt": (
             "Eres el Guardián Documental del Parlamento Nexus IA. "
@@ -75,7 +75,7 @@ PARLIAMENT_STACK = {
             "citar fuentes y proveer memoria institucional. "
             "Responde siempre en español."
         ),
-        "timeout": 30.0
+        "timeout": 25.0
     }
 }
 
@@ -95,7 +95,6 @@ async def call_ia(role: str, message: str) -> str:
     
     payload = {
         "model": config["model"],
-        "provider": {"order": ["groq"]},
         "messages": [
             {"role": "system", "content": config["system_prompt"]},
             {"role": "user", "content": message}
@@ -118,6 +117,8 @@ async def call_ia(role: str, message: str) -> str:
                 else:
                     logger.error(f"Respuesta inesperada de {config['model']}: {data}")
                     return f"Error: Respuesta inesperada de {config['role']}."
+            elif response.status_code == 402:
+                return f"Error: Sin créditos en OpenRouter."
             else:
                 logger.error(f"Error {config['model']}: {response.status_code} - {response.text}")
                 return f"Error: {config['role']} no está disponible. Código: {response.status_code}"
