@@ -1,4 +1,4 @@
-}}# === MAESTRO-NEXUS FICHA v1.7 ===
+# === MAESTRO-NEXUS FICHA v1.7 ===
 # ID: api/router.py | COMMIT: verified_free_v1.7 | ESTADO: CORREGIDO
 # GERENTE: DeepSeek. Modelos verificados en OpenRouter al 26-jun-2026.
 
@@ -59,14 +59,14 @@ async def call_ia(role: str, message: str) -> str:
     config = PARLIAMENT_STACK.get(role)
     if not config:
         return f"Error: Rol '{role}' no encontrado."
-    
+
     message = sanitize_prompt(message)
-    
+
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
-    
+
     payload = {
         "model": config["model"],
         "messages": [
@@ -74,7 +74,7 @@ async def call_ia(role: str, message: str) -> str:
             {"role": "user", "content": message}
         ]
     }
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -83,7 +83,7 @@ async def call_ia(role: str, message: str) -> str:
                 json=payload,
                 timeout=config["timeout"]
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 if "choices" in data and len(data["choices"]) > 0:
@@ -104,7 +104,7 @@ async def handle_parliament_debate(message: str) -> dict:
     roles_to_call = [r for r in PARLIAMENT_STACK.keys() if r != "gerente"]
     tasks = [call_ia(role, message) for role in roles_to_call]
     responses = await asyncio.gather(*tasks)
-    
+
     for role, response in zip(roles_to_call, responses):
         config = PARLIAMENT_STACK[role]
         results[role] = {
@@ -112,14 +112,14 @@ async def handle_parliament_debate(message: str) -> dict:
             "model": config["model"],
             "response": response
         }
-    
+
     return results
 
 async def get_manager_recommendation(message: str, responses: dict) -> str:
     context = "Debate Parlamentario Nexus IA:\n\n"
     for role, data in responses.items():
         context += f"{data['role']} ({data['model']}):\n{data['response']}\n\n"
-    
+
     prompt = f"{context}\nComo Gerente General, basado en estas posturas, emite tu recomendación final."
-    
+
     return await call_ia("gerente", prompt)
