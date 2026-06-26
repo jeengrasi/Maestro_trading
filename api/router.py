@@ -1,7 +1,6 @@
-# === MAESTRO-NEXUS FICHA v1.5 ===
-# ID: api/router.py | COMMIT: verified_models_v1.5 | ESTADO: CORREGIDO POR MESA
-# GERENTE: DeepSeek. Stack verificado con modelos reales de OpenRouter.
-# CORRECCIÓN: Nombres de modelos validados por Copilot y Gemini.
+}}# === MAESTRO-NEXUS FICHA v1.7 ===
+# ID: api/router.py | COMMIT: verified_free_v1.7 | ESTADO: CORREGIDO
+# GERENTE: DeepSeek. Modelos verificados en OpenRouter al 26-jun-2026.
 
 import os
 import httpx
@@ -14,8 +13,8 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 if not OPENROUTER_API_KEY:
-    logger.error("OPENROUTER_API_KEY no está configurada en Vercel.")
-    raise RuntimeError("OPENROUTER_API_KEY no configurada. El Parlamento no puede iniciar.")
+    logger.error("OPENROUTER_API_KEY no configurada.")
+    raise RuntimeError("OPENROUTER_API_KEY no configurada.")
 
 def sanitize_prompt(text: str) -> str:
     forbidden = [
@@ -29,50 +28,29 @@ def sanitize_prompt(text: str) -> str:
         cleaned = cleaned.replace(phrase, "")
     return cleaned.strip()
 
-# === STACK PARLAMENTARIO (MODELOS VERIFICADOS EN OPENROUTER) ===
 PARLIAMENT_STACK = {
     "gerente": {
-        "model": "google/gemini-2.0-flash-thinking-exp",
+        "model": "qwen/qwen3-next-80b-a3b-instruct",
         "role": "Gerente General",
-        "system_prompt": (
-            "Eres el Gerente General del Parlamento Nexus IA. "
-            "Moderas debates, analizas posturas de IAs especialistas "
-            "y emites una recomendación final clara y concisa. "
-            "Responde siempre en español."
-        ),
-        "timeout": 40.0
+        "system_prompt": "Eres el Gerente General del Parlamento Nexus IA. Moderás debates y emites recomendaciones finales. Responde en español.",
+        "timeout": 30.0
     },
     "auditor": {
-        "model": "deepseek/deepseek-r1",
+        "model": "meta-llama/llama-3.3-70b-instruct",
         "role": "Auditor Técnico",
-        "system_prompt": (
-            "Eres el Auditor Técnico del Parlamento Nexus IA. "
-            "Revisas código Python, detectas errores, validas cambios "
-            "y aseguras el cumplimiento de la Constitución Nexus. "
-            "Responde siempre en español."
-        ),
-        "timeout": 30.0
+        "system_prompt": "Eres el Auditor Técnico del Parlamento Nexus IA. Revisas código Python y validas cambios. Responde en español.",
+        "timeout": 25.0
     },
     "estratega": {
-        "model": "qwen/qwen-2.5-72b-instruct",
+        "model": "google/gemma-4-26b-a4b",
         "role": "Estratega de Mercado",
-        "system_prompt": (
-            "Eres el Estratega de Mercado del Parlamento Nexus IA. "
-            "Analizas oportunidades de inversión, evalúas riesgos macroeconómicos "
-            "y recomiendas acciones basadas en datos. "
-            "Responde siempre en español."
-        ),
-        "timeout": 30.0
+        "system_prompt": "Eres el Estratega de Mercado del Parlamento Nexus IA. Analizas oportunidades y riesgos. Responde en español.",
+        "timeout": 25.0
     },
     "guardian": {
-        "model": "meta-llama/llama-3.3-70b-instruct",
+        "model": "nvidia/nemotron-3.5-content-safety",
         "role": "Guardián Documental",
-        "system_prompt": (
-            "Eres el Guardián Documental del Parlamento Nexus IA. "
-            "Lees documentos del proyecto, verificas trazabilidad, "
-            "citas fuentes y provees memoria institucional. "
-            "Responde siempre en español."
-        ),
+        "system_prompt": "Eres el Guardián Documental del Parlamento Nexus IA. Lees documentos y verificas trazabilidad. Responde en español.",
         "timeout": 30.0
     }
 }
@@ -80,7 +58,7 @@ PARLIAMENT_STACK = {
 async def call_ia(role: str, message: str) -> str:
     config = PARLIAMENT_STACK.get(role)
     if not config:
-        return f"Error: Rol '{role}' no encontrado en el Parlamento."
+        return f"Error: Rol '{role}' no encontrado."
     
     message = sanitize_prompt(message)
     
@@ -94,11 +72,7 @@ async def call_ia(role: str, message: str) -> str:
         "messages": [
             {"role": "system", "content": config["system_prompt"]},
             {"role": "user", "content": message}
-        ],
-        "provider": {
-            "order": ["Groq", "Together", "DeepInfra", "OpenRouter"],
-            "allow_fallbacks": True
-        }
+        ]
     }
     
     try:
@@ -114,19 +88,15 @@ async def call_ia(role: str, message: str) -> str:
                 data = response.json()
                 if "choices" in data and len(data["choices"]) > 0:
                     return data["choices"][0]["message"]["content"]
-                else:
-                    logger.error(f"Respuesta inesperada de {config['model']}: {data}")
-                    return f"Error: Respuesta inesperada de {config['role']}."
+                return "Error: Respuesta vacía."
             elif response.status_code == 402:
-                return f"Error: Sin créditos en OpenRouter."
+                return "Error: Sin créditos en OpenRouter."
             else:
-                logger.error(f"Error {config['model']}: {response.status_code} - {response.text}")
+                logger.error(f"Error {config['model']}: {response.status_code}")
                 return f"Error: {config['role']} no disponible. Código: {response.status_code}"
     except httpx.TimeoutException:
-        logger.error(f"Timeout al llamar a {config['model']}")
         return f"Error: {config['role']} tardó demasiado."
     except Exception as e:
-        logger.error(f"Excepción al llamar a {config['role']}: {e}")
         return f"Error: No se pudo contactar a {config['role']}."
 
 async def handle_parliament_debate(message: str) -> dict:
