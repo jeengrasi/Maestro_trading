@@ -1,8 +1,7 @@
-# === MAESTRO-NEXUS FICHA v1.3 ===
-# ID: api/index.py | COMMIT: fix_sync_redis_v1.3 | ESTADO: CORREGIDO
-# COVERAGE: 0% (Sin tests activos) | COST_UPSTASH: ~1-3 ops/call | RIESGO: MÍNIMO
-# ÚLTIMO_TEST: 2026-06-24 | DIRECTOR_ID: JEISSON_01
-# GERENTE: DeepSeek. Corregido bug de await en Redis síncrono. Eliminados todos los await de llamadas a upstash-redis.
+# === MAESTRO-NEXUS FICHA v1.4 ===
+# ID: api/index.py | COMMIT: parliament_integration_v1.4 | ESTADO: MEJORADO
+# GERENTE: DeepSeek. Añadida integración con Chat Parlamentario (router.py).
+# Los mensajes normales se enrutan al Parlamento. Los comandos siguen funcionando.
 
 import os
 import sys
@@ -18,7 +17,6 @@ from alpaca.trading.enums import OrderSide, TimeInForce
 from upstash_redis import Redis
 from api.config import Config
 
-# Visibilidad de capas en Vercel
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logging.basicConfig(level=logging.INFO)
@@ -37,12 +35,7 @@ alpaca_client = TradingClient(
     paper=Config.ALPACA_PAPER
 )
 
-# === LAYER_CORE / MEMORY ENGRANAJE (v1.3) ===
 def bootstrap_nexus_memory(redis_client: Redis):
-    """
-    Engrana la memoria institucional (NEXUS_MANIFEST.json) con la memoria operativa (Redis).
-    Si faltan llaves críticas, las reconstruye desde el manifiesto.
-    """
     try:
         tg_id = redis_client.get("telegram:group_id")
         feat_parliament = redis_client.get("feature:parliament")
@@ -70,9 +63,9 @@ def bootstrap_nexus_memory(redis_client: Redis):
                 redis_client.set("risk:max_vix", str(max_vix))
                 redis_client.set("nexus:state:last_recovery", datetime.now().isoformat())
 
-                logger.info("⚙️ MEMORIA NEXUS: Redis auto-hidratado exitosamente desde NEXUS_MANIFEST.json")
+                logger.info("⚙️ MEMORIA NEXUS: Redis auto-hidratado exitosamente.")
     except Exception as e:
-        logger.error(f"❌ Error crítico en engranaje de memoria: {e}", exc_info=True)
+        logger.error(f"❌ Error en engranaje de memoria: {e}", exc_info=True)
 
 @app.get("/")
 async def root():
@@ -82,19 +75,13 @@ async def root():
 async def health():
     start = datetime.now()
     redis_ok = False
-    
     try:
-        r = await asyncio.wait_for(
-            asyncio.to_thread(redis.ping), 
-            timeout=2.0
-        )
+        r = await asyncio.wait_for(asyncio.to_thread(redis.ping), timeout=2.0)
         redis_ok = (r == "PONG" or r is True)
     except Exception as e:
-        logger.error(f"Fallo de conexión Upstash en /health: {e}")
+        logger.error(f"Fallo Upstash en /health: {e}")
         redis_ok = False
-
     latency = (datetime.now() - start).total_seconds() * 1000
-
     return {
         "status": "ok" if redis_ok else "degraded",
         "redis": redis_ok,
@@ -150,6 +137,7 @@ async def telegram_webhook(req: Request):
         "match": str(chat_id) == str(authorized_chat)
     }))
 
+    # === MODO PARLAMENTO: STAGING DE CÓDIGO ===
     if str(chat_id) == str(authorized_chat) and str(raw_feature_parliament) == "1":
         try:
             from layer_telecom.lock import handle_m2m_message
@@ -158,6 +146,7 @@ async def telegram_webhook(req: Request):
             redis.set("system:last_error", f"Telecom crash: {str(e)}")
             logger.error(f"Fallo crítico en layer_telecom: {e}", exc_info=True)
 
+    # === COMANDOS DIRECTOS ===
     if text == "/chatid":
         await send_telegram(
             f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`",
@@ -174,6 +163,7 @@ async def telegram_webhook(req: Request):
             f"💸 *Buying Power:* ${float(acc.buying_power):,.2f}",
             chat_id=chat_id
         )
+        return {"ok": True}
 
     if text == "/start":
         raw_max_vix = redis.get("risk:max_vix")
@@ -185,5 +175,32 @@ async def telegram_webhook(req: Request):
             f"• Riesgo: `{Config.RISK_PER_TRADE * 100}%`",
             chat_id=chat_id
         )
+        return {"ok": True}
+
+    # === CHAT PARLAMENTARIO: MENSAJES NORMALES ===
+    if text and not text.startswith("/"):
+        try:
+            from api.router import handle_parliament_debate, get_manager_recommendation
+            
+            await send_telegram("🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo. Aguarde unos segundos...", chat_id=chat_id)
+            
+            debate_results = await handle_parliament_debate(text)
+            
+            recommendation = await get_manager_recommendation(text, debate_results)
+            
+            response_text = "🏛️ *DEBATE PARLAMENTARIO*\n\n"
+            for role, data in debate_results.items():
+                response_text += f"*{data['role']} ({data['model']}):*\n{data['response']}\n\n"
+            response_text += f"---\n📋 *RECOMENDACIÓN FINAL DEL GERENTE:*\n{recommendation}"
+            
+            if len(response_text) > 4000:
+                response_text = response_text[:4000] + "\n\n...(respuesta truncada por longitud)"
+            
+            await send_telegram(response_text, chat_id=chat_id)
+            return {"ok": True}
+        except Exception as e:
+            logger.error(f"Error en Parlamento: {e}", exc_info=True)
+            await send_telegram(f"❌ Error al procesar el debate parlamentario: {str(e)}", chat_id=chat_id)
+            return {"ok": True}
 
     return {"ok": True}
