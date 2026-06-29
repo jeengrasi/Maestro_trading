@@ -1,7 +1,8 @@
-# === MAESTRO-NEXUS FICHA v2.0.1 ===
-# ID: api/router.py | COMMIT: huggingface_v2.0.1 | ESTADO: PRODUCCIÓN
-# FECHA: 2026-06-28 | AUDITADO POR: DeepSeek (Gerente), Gemini (Estratega), Copilot (Auditor)
-# CAMBIO vs v2.0: Guardián reemplazado por Zephyr-7B (ligero, compatible con HuggingFace Free Tier).
+# === MAESTRO-NEXUS FICHA v2.1 ===
+# ID: api/router.py | COMMIT: openrouter_free_v2.1 | ESTADO: PRODUCCIÓN
+# FECHA: 2026-06-28 | AUDITADO POR: DeepSeek (Gerente)
+# CAMBIO vs v2.0.1: HuggingFace → OpenRouter con modelo gratuito openrouter/free.
+# MOTIVO: HuggingFace Inference API no resuelve DNS consistentemente.
 
 import os
 import httpx
@@ -12,12 +13,12 @@ import re
 
 logger = logging.getLogger(__name__)
 
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
-HUGGINGFACE_URL = "https://api-inference.huggingface.co/models"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-if not HUGGINGFACE_API_KEY:
-    logger.error("CRÍTICO: HUGGINGFACE_API_KEY no configurada en Vercel.")
-    raise RuntimeError("Sistema detenido: Falta clave de API de HuggingFace.")
+if not OPENROUTER_API_KEY:
+    logger.error("CRÍTICO: OPENROUTER_API_KEY no configurada en Vercel.")
+    raise RuntimeError("Sistema detenido: Falta clave de API de OpenRouter.")
 
 def sanitize_prompt(text: str) -> str:
     pattern = re.compile(
@@ -30,25 +31,25 @@ def sanitize_prompt(text: str) -> str:
 
 PARLIAMENT_STACK = {
     "gerente": {
-        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "model": "openrouter/free",
         "role": "Gerente General",
         "system_prompt": "Eres el Gerente General del Parlamento Nexus IA. Moderás debates y emites recomendaciones finales. Responde en español.",
         "timeout": 45.0
     },
     "auditor": {
-        "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+        "model": "openrouter/free",
         "role": "Auditor Técnico",
         "system_prompt": "Eres el Auditor Técnico del Parlamento Nexus IA. Revisas código Python y validas cambios. Responde en español.",
         "timeout": 30.0
     },
     "estratega": {
-        "model": "google/gemma-2-9b-it",
+        "model": "openrouter/free",
         "role": "Estratega de Mercado",
         "system_prompt": "Eres el Estratega de Mercado del Parlamento Nexus IA. Analizas oportunidades y riesgos. Responde en español.",
         "timeout": 30.0
     },
     "guardian": {
-        "model": "HuggingFaceH4/zephyr-7b-beta",
+        "model": "openrouter/free",
         "role": "Guardián Documental",
         "system_prompt": "Eres el Guardián Documental del Parlamento Nexus IA. Lees documentos y verificas trazabilidad. Responde en español.",
         "timeout": 40.0
@@ -64,23 +65,23 @@ async def call_ia(role: str, message: str) -> str:
     start_time = time.perf_counter()
     
     headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json"
     }
     
     payload = {
-        "inputs": f"{config['system_prompt']}\n\nUsuario: {message}\n\nAsistente:",
-        "parameters": {
-            "max_new_tokens": 500,
-            "return_full_text": False
-        }
+        "model": config["model"],
+        "messages": [
+            {"role": "system", "content": config["system_prompt"]},
+            {"role": "user", "content": message}
+        ]
     }
     
     for attempt in range(2):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{HUGGINGFACE_URL}/{config['model']}",
+                    OPENROUTER_URL,
                     headers=headers,
                     json=payload,
                     timeout=config["timeout"]
@@ -90,10 +91,8 @@ async def call_ia(role: str, message: str) -> str:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    logger.info(f"Éxito: {role} | Modelo: {config['model']} | Latencia: {latency:.2f}s")
-                    if isinstance(data, list) and len(data) > 0:
-                        return data[0].get("generated_text", "Error: Respuesta vacía.")
-                    return "Error: Respuesta inesperada de HuggingFace."
+                    logger.info(f"Éxito: {role} | Latencia: {latency:.2f}s")
+                    return data["choices"][0]["message"]["content"]
                 
                 logger.warning(f"Intento {attempt+1} fallido para {role}: {response.status_code}")
                 await asyncio.sleep(1)
