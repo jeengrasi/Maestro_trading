@@ -1,8 +1,7 @@
-# === MAESTRO-NEXUS FICHA v1.5 ===
-# ID: api/index.py | COMMIT: fix_parliament_flow_v1.5 | ESTADO: CORREGIDO
-# FECHA: 2026-06-28 | GERENTE: DeepSeek
-# CAMBIO: El Parlamento se ejecuta ANTES que lock.py para mensajes normales.
-# lock.py solo se ejecuta si el mensaje contiene código Python o COMMIT.
+# === MAESTRO-NEXUS FICHA v1.6 ===
+# ID: api/index.py | COMMIT: actas_integration_v1.6 | ESTADO: CORREGIDO
+# FECHA: 2026-06-29 | GERENTE: DeepSeek
+# CAMBIO vs v1.5: Añadida generación y guardado automático de actas después del debate.
 
 import os
 import sys
@@ -169,10 +168,15 @@ async def telegram_webhook(req: Request):
         )
         return {"ok": True}
 
-    # === CHAT PARLAMENTARIO: MENSAJES NORMALES (ANTES QUE LOCK) ===
+    # === CHAT PARLAMENTARIO ===
     if text and not text.startswith("/"):
         try:
-            from api.router import handle_parliament_debate, get_manager_recommendation
+            from api.router import (
+                handle_parliament_debate,
+                get_manager_recommendation,
+                generate_acta,
+                save_acta_to_github
+            )
 
             await send_telegram(
                 "🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo. Aguarde unos segundos...",
@@ -191,6 +195,18 @@ async def telegram_webhook(req: Request):
                 response_text = response_text[:4000] + "\n\n...(respuesta truncada por longitud)"
 
             await send_telegram(response_text, chat_id=chat_id)
+
+            # === GENERAR Y GUARDAR ACTA (BACKGROUND) ===
+            try:
+                acta = await generate_acta(text, debate_results, recommendation)
+                result = await save_acta_to_github(acta, f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}")
+                if result.get("status") == "success":
+                    logger.info("Acta guardada en GitHub exitosamente.")
+                else:
+                    logger.warning(f"Acta no guardada: {result}")
+            except Exception as e:
+                logger.error(f"Error al generar/guardar acta: {e}")
+
             return {"ok": True}
         except Exception as e:
             logger.error(f"Error en Parlamento: {e}", exc_info=True)
@@ -200,7 +216,7 @@ async def telegram_webhook(req: Request):
             )
             return {"ok": True}
 
-    # === MODO PARLAMENTO: STAGING DE CÓDIGO (SOLO SI TIENE CÓDIGO) ===
+    # === MODO PARLAMENTO: STAGING DE CÓDIGO ===
     if str(chat_id) == str(authorized_chat) and str(raw_feature_parliament) == "1":
         if "```python" in text or "COMMIT:" in text:
             try:
