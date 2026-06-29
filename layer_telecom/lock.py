@@ -1,9 +1,8 @@
-# === MAESTRO-NEXUS FICHA v1.6-FINAL-CANDIDATE ===
-# ID: layer_telecom/lock.py | COMMIT: lock_v1.6_final_candidate
-# ESTADO: PENDIENTE DE FIRMA CTO + SRE
-# FIXES META SRE: 1-6 + Enmienda 1 + Enmienda 2
-# GEMINI_CTO: FIRMADO | FECHA: 31/05/2026
-# META_SRE: APROBADO PARA STAGING | FECHA: 31/05/2026
+# === MAESTRO-NEXUS FICHA v1.7 ===
+# ID: layer_telecom/lock.py | COMMIT: fix_sync_redis_v1.7 | ESTADO: CORREGIDO
+# FECHA: 2026-06-28 | AUDITADO POR: DeepSeek (Gerente)
+# CAMBIO: Eliminados TODOS los await de llamadas a Redis (Upstash es síncrono).
+# Este error bloqueaba el flujo parlamentario antes de llegar al router.py.
 
 import os
 import httpx
@@ -29,29 +28,33 @@ async def handle_m2m_message(payload: dict, redis):
         return {"status": "missing_msg_id"}
 
     # --- Idempotencia: TTL 120s ---
+    # CORREGIDO: Eliminado await. Redis de Upstash es síncrono.
     processed_key = f"processed:{msg_id}"
-    if not await redis.set(processed_key, "1", nx=True, ex=120):
+    if not redis.set(processed_key, "1", nx=True, ex=120):
         return {"status": "duplicate_ignored"}
 
     # --- Lock atómico 15s ---
-    if not await redis.set("parliament:lock", "1", nx=True, ex=15):
-        await redis.lpush("parliament:queue", f"{msg_id}:{sender}:{text}")
+    # CORREGIDO: Eliminado await.
+    if not redis.set("parliament:lock", "1", nx=True, ex=15):
+        redis.lpush("parliament:queue", f"{msg_id}:{sender}:{text}")
         return {"status": "enqueued_in_fifo"}
 
     try:
         # Estado del Parlamento
-        await redis.set("parliament:current_speaker", sender, ex=30)
-        await redis.set("parliament:debate_status", "IN_DEBATE")
+        # CORREGIDO: Eliminado await.
+        redis.set("parliament:current_speaker", sender, ex=30)
+        redis.set("parliament:debate_status", "IN_DEBATE")
 
         # Historial acotado
         today = datetime.now().strftime("%Y-%m-%d")
         history_key = f"parliament:history:{today}"
-        await redis.lpush(history_key, text)
-        await redis.ltrim(history_key, 0, 999)
+        redis.lpush(history_key, text)
+        redis.ltrim(history_key, 0, 999)
 
         # Circuit breaker Capa 3
         circuit_key = "circuit_breaker:staging"
-        circuit_failures = await redis.get(circuit_key)
+        # CORREGIDO: Eliminado await.
+        circuit_failures = redis.get(circuit_key)
         try:
             circuit_failures = int(circuit_failures) if circuit_failures else 0
         except:
@@ -63,16 +66,18 @@ async def handle_m2m_message(payload: dict, redis):
             try:
                 return await process_staging_request(text, msg_id, sender, redis)
             except Exception as e:
-                await redis.incr(circuit_key)
-                await redis.expire(circuit_key, 300)
+                # CORREGIDO: Eliminado await.
+                redis.incr(circuit_key)
+                redis.expire(circuit_key, 300)
                 return {"status": "staging_error_circuit_incremented", "error": str(e)}
 
         return {"status": "processed", "speaker": sender}
 
     finally:
         # --- Replay FIFO antes de liberar lock ---
-        next_item = await redis.rpop("parliament:queue")
-        await redis.delete("parliament:lock")
+        # CORREGIDO: Eliminado await.
+        next_item = redis.rpop("parliament:queue")
+        redis.delete("parliament:lock")
 
         if next_item:
             raw_url = os.getenv("VERCEL_URL", "").strip()
@@ -94,8 +99,9 @@ async def handle_m2m_message(payload: dict, redis):
 
             # Contador anti-loop
             replay_key = f"replay_count:{v_msg_id}"
-            new_count = await redis.incr(replay_key)
-            await redis.expire(replay_key, 600)
+            # CORREGIDO: Eliminado await.
+            new_count = redis.incr(replay_key)
+            redis.expire(replay_key, 600)
 
             if new_count > 3:
                 return {"status": "replay_limit_reached_no_replay"}
