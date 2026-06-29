@@ -1,7 +1,8 @@
-# === MAESTRO-NEXUS FICHA v1.4 ===
-# ID: api/index.py | COMMIT: parliament_integration_v1.4 | ESTADO: MEJORADO
-# GERENTE: DeepSeek. Añadida integración con Chat Parlamentario (router.py).
-# Los mensajes normales se enrutan al Parlamento. Los comandos siguen funcionando.
+# === MAESTRO-NEXUS FICHA v1.5 ===
+# ID: api/index.py | COMMIT: fix_parliament_flow_v1.5 | ESTADO: CORREGIDO
+# FECHA: 2026-06-28 | GERENTE: DeepSeek
+# CAMBIO: El Parlamento se ejecuta ANTES que lock.py para mensajes normales.
+# lock.py solo se ejecuta si el mensaje contiene código Python o COMMIT.
 
 import os
 import sys
@@ -137,15 +138,6 @@ async def telegram_webhook(req: Request):
         "match": str(chat_id) == str(authorized_chat)
     }))
 
-    # === MODO PARLAMENTO: STAGING DE CÓDIGO ===
-    if str(chat_id) == str(authorized_chat) and str(raw_feature_parliament) == "1":
-        try:
-            from layer_telecom.lock import handle_m2m_message
-            return await handle_m2m_message(payload, redis)
-        except Exception as e:
-            redis.set("system:last_error", f"Telecom crash: {str(e)}")
-            logger.error(f"Fallo crítico en layer_telecom: {e}", exc_info=True)
-
     # === COMANDOS DIRECTOS ===
     if text == "/chatid":
         await send_telegram(
@@ -177,30 +169,45 @@ async def telegram_webhook(req: Request):
         )
         return {"ok": True}
 
-    # === CHAT PARLAMENTARIO: MENSAJES NORMALES ===
+    # === CHAT PARLAMENTARIO: MENSAJES NORMALES (ANTES QUE LOCK) ===
     if text and not text.startswith("/"):
         try:
             from api.router import handle_parliament_debate, get_manager_recommendation
-            
-            await send_telegram("🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo. Aguarde unos segundos...", chat_id=chat_id)
-            
+
+            await send_telegram(
+                "🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo. Aguarde unos segundos...",
+                chat_id=chat_id
+            )
+
             debate_results = await handle_parliament_debate(text)
-            
             recommendation = await get_manager_recommendation(text, debate_results)
-            
+
             response_text = "🏛️ *DEBATE PARLAMENTARIO*\n\n"
             for role, data in debate_results.items():
                 response_text += f"*{data['role']} ({data['model']}):*\n{data['response']}\n\n"
             response_text += f"---\n📋 *RECOMENDACIÓN FINAL DEL GERENTE:*\n{recommendation}"
-            
+
             if len(response_text) > 4000:
                 response_text = response_text[:4000] + "\n\n...(respuesta truncada por longitud)"
-            
+
             await send_telegram(response_text, chat_id=chat_id)
             return {"ok": True}
         except Exception as e:
             logger.error(f"Error en Parlamento: {e}", exc_info=True)
-            await send_telegram(f"❌ Error al procesar el debate parlamentario: {str(e)}", chat_id=chat_id)
+            await send_telegram(
+                f"❌ Error al procesar el debate parlamentario: {str(e)}",
+                chat_id=chat_id
+            )
             return {"ok": True}
+
+    # === MODO PARLAMENTO: STAGING DE CÓDIGO (SOLO SI TIENE CÓDIGO) ===
+    if str(chat_id) == str(authorized_chat) and str(raw_feature_parliament) == "1":
+        if "```python" in text or "COMMIT:" in text:
+            try:
+                from layer_telecom.lock import handle_m2m_message
+                return await handle_m2m_message(payload, redis)
+            except Exception as e:
+                redis.set("system:last_error", f"Telecom crash: {str(e)}")
+                logger.error(f"Fallo crítico en layer_telecom: {e}", exc_info=True)
 
     return {"ok": True}
