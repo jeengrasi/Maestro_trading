@@ -144,6 +144,22 @@ async def telegram_webhook(req: Request):
             f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`",
             chat_id=chat_id
         )
+            # === GUARDAR ACTA AUTOMÁTICA ===
+            try:
+                debate_id = f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}"
+                acta_content = f"# Acta del Debate\n\n**ID:** {debate_id}\n**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n**Tema:** {text}\n\n"
+                for role, data in debate_results.items():
+                    acta_content += f"## {data['role']}\n{data['response']}\n\n"
+                acta_content += f"## Recomendación Final del Gerente\n{recommendation}\n"
+
+                from api.router import save_acta_to_github
+                result = await save_acta_to_github(acta_content, debate_id)
+                if result.get("status") == "success":
+                    logger.info(f"Acta {debate_id} guardada en GitHub.")
+                else:
+                    logger.warning(f"Acta {debate_id} no guardada: {result}")
+            except Exception as e:
+                logger.error(f"Error al guardar acta: {e}")
         return {"ok": True}
 
     if text == "/balance":
