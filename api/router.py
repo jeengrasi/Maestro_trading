@@ -11,13 +11,11 @@ import time
 import re
 import base64
 from datetime import datetime
+from api.providers.groq import call_groq
+from api.providers.openrouter import call_openrouter
 
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = "jeengrasi/Maestro_trading"
 
@@ -100,76 +98,6 @@ async def call_ia(role: str, message: str) -> str:
     
     return f"Error: {config['role']} no disponible. Groq y OpenRouter fallaron."
 
-async def call_groq(config: dict, message: str) -> str:
-    if not GROQ_API_KEY:
-        return "Error: GROQ_API_KEY no configurada."
-    
-    start_time = time.perf_counter()
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": config["model"],
-        "messages": [
-            {"role": "system", "content": config["system_prompt"]},
-            {"role": "user", "content": message}
-        ]
-    }
-    for attempt in range(2):
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(GROQ_URL, headers=headers, json=payload, timeout=config["timeout"])
-                latency = time.perf_counter() - start_time
-                if response.status_code == 200:
-                    data = response.json()
-                    logger.info(f"Groq éxito: {config['role']} | Latencia: {latency:.2f}s")
-                    return data["choices"][0]["message"]["content"]
-                logger.warning(f"Groq intento {attempt+1}: {response.status_code}")
-                await asyncio.sleep((attempt + 1) * 1)
-        except Exception as e:
-            logger.error(f"Groq excepción intento {attempt+1}: {e}")
-            await asyncio.sleep(2)
-    return "Error: Groq no disponible."
-
-async def call_openrouter(config: dict, message: str) -> str:
-    if not OPENROUTER_API_KEY:
-        return "Error: OPENROUTER_API_KEY no configurada."
-    
-    start_time = time.perf_counter()
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "openrouter/free",
-        "messages": [
-            {"role": "system", "content": config["system_prompt"]},
-            {"role": "user", "content": message}
-        ]
-    }
-    for attempt in range(2):
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(OPENROUTER_URL, headers=headers, json=payload, timeout=45.0)
-                latency = time.perf_counter() - start_time
-                if response.status_code == 200:
-                    data = response.json()
-                    logger.info(f"OpenRouter éxito (fallback): {config['role']} | Latencia: {latency:.2f}s")
-                    return data["choices"][0]["message"]["content"]
-                logger.warning(f"OpenRouter intento {attempt+1}: {response.status_code}")
-                await asyncio.sleep((attempt + 1) * 1)
-        except Exception as e:
-            logger.error(f"OpenRouter excepción intento {attempt+1}: {e}")
-            await asyncio.sleep(2)
-    return "Error: OpenRouter no disponible."
-
-async def handle_parliament_debate(message: str) -> dict:
-    results = {}
-    roles_to_call = [r for r in PARLIAMENT_STACK.keys() if r not in ("gerente", "secretario")]
-    tasks = [call_ia(role, message) for role in roles_to_call]
-    responses = await asyncio.gather(*tasks)
-    
     for role, response in zip(roles_to_call, responses):
         results[role] = {
             "role": PARLIAMENT_STACK[role]["role"],
