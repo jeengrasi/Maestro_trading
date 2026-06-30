@@ -80,7 +80,7 @@ async def telegram_webhook(req: Request):
         try:
             from api.router import handle_parliament_debate, get_manager_recommendation, classify_intent, call_ia
             intent = classify_intent(text)
-            if intent["department"] == "general" or intent["confidence"] >= 3:
+            if intent["department"] == "general" or intent["confidence"] >= 1:
                 await send_telegram("🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo...", chat_id=chat_id)
                 debate_results = await handle_parliament_debate(text)
                 recommendation = await get_manager_recommendation(text, debate_results)
