@@ -111,3 +111,4 @@ async def telegram_webhook(req: Request):
                 redis.set("system:last_error", f"Telecom crash: {str(e)}")
 
     return {"ok": True}
+
