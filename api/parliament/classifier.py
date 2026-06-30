@@ -10,17 +10,17 @@ DEPARTMENTS = {
     "auditoria": {
         "keywords": ["código", "bug", "error", "github", "deploy", "router", "index",
                      "python", "función", "script", "vercel", "redis", "api", "token",
-                     "commit", "push", "pull", "merge", "rama", "branch", "revisa"],
+                     "commit", "push", "pull", "merge", "rama", "branch", "revisa", "revisar", "revisión", "analiza", "error", "fallo"],
         "role": "auditor"
     },
     "documentacion": {
         "keywords": ["acta", "historial", "bitácora", "documento", "constitución",
-                     "memoria", "trazabilidad", "registro", "anterior", "pasado"],
+                     "memoria", "trazabilidad", "registro", "anterior", "pasado", "ayer", "decidimos", "antes", "histórico", "semana"],
         "role": "guardian"
     },
     "gobernanza": {
         "keywords": ["arquitectura", "parlamento", "roles", "fase", "módulo", "debate",
-                     "decisión", "votar", "aprobar", "vetar"],
+                     "decisión", "votar", "aprobar", "vetar", "futuro", "proyecto", "plan", "estrategia", "visión", "meta"],
         "role": "gerente"
     }
 }
