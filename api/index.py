@@ -191,6 +191,11 @@ async def telegram_webhook(req: Request):
                 response_text = response_text[:4000] + "\n\n...(respuesta truncada por longitud)"
 
             await send_telegram(response_text, chat_id=chat_id)
+            # Guardar debate en Redis para GitHub Actions
+            debate_key = f"debate:{datetime.now().strftime('%Y%m%d-%H%M')}"
+            redis.set(debate_key, json.dumps({"tema": text, "resultados": {k: v["response"] for k, v in debate_results.items()}, "recomendacion": recommendation}))
+            redis.expire(debate_key, 3600)
+
             # === GUARDAR ACTA AUTOMÁTICA ===
             try:
                 debate_id = f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}"
