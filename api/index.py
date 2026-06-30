@@ -17,6 +17,7 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from upstash_redis import Redis
 from api.config import Config
+from api.telegram.utils import send_telegram
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -172,7 +173,7 @@ async def telegram_webhook(req: Request):
     # === CHAT PARLAMENTARIO: MENSAJES NORMALES (ANTES QUE LOCK) ===
     if text and not text.startswith("/"):
         try:
-            from api.router import handle_parliament_debate, get_manager_recommendation
+            from api.router import handle_parliament_debate, get_manager_recommendation, save_acta_to_github
 
             await send_telegram(
                 "🏛️ *Parlamento Nexus convocado.*\n\nLas IAs están debatiendo. Aguarde unos segundos...",
