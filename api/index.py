@@ -1,6 +1,7 @@
-# === MAESTRO-NEXUS FICHA v1.6 ===
-# ID: api/index.py | COMMIT: classifier_v1.6 | ESTADO: CORREGIDO
+# === MAESTRO-NEXUS FICHA v1.7 ===
+# ID: api/index.py | COMMIT: memory_v1.7 | ESTADO: CORREGIDO
 # FECHA: 2026-06-30 | GERENTE: DeepSeek
+# CAMBIO vs v1.6: Memoria en 3 niveles (Redis, GitHub)
 
 import os, sys, httpx, logging, asyncio, json
 from datetime import datetime
@@ -96,6 +97,27 @@ async def telegram_webhook(req: Request):
                 response_text = f"🏛️ *{dept_name}*\n\n{response}"
             if len(response_text) > 4000: response_text = response_text[:4000] + "\n\n...(truncado)"
             await send_telegram(response_text, chat_id=chat_id)
+
+            # === MEMORIA CORTO PLAZO (Redis) ===
+            redis.set("memory:last_debate", json.dumps({
+                "tema": text, "fecha": datetime.now().isoformat(),
+                "respuesta": response_text[:500]
+            }))
+            redis.expire("memory:last_debate", 86400)
+
+            # === MEMORIA MEDIANO PLAZO (GitHub) ===
+            try:
+                from api.router import save_acta_to_github
+                acta_data = {
+                    "id": f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}",
+                    "fecha": datetime.now().isoformat(),
+                    "tema": text,
+                    "respuesta": response_text[:2000]
+                }
+                await save_acta_to_github(json.dumps(acta_data, indent=2), acta_data["id"])
+            except Exception as e:
+                logger.warning(f"No se pudo guardar acta: {e}")
+
             return {"ok": True}
         except Exception as e:
             logger.error(f"Error Parlamento: {e}", exc_info=True)
@@ -111,4 +133,3 @@ async def telegram_webhook(req: Request):
                 redis.set("system:last_error", f"Telecom crash: {str(e)}")
 
     return {"ok": True}
-
