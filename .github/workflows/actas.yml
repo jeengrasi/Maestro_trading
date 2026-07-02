@@ -1,8 +1,10 @@
 name: Generar Actas del Parlamento
+
 on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+
 jobs:
   generar-actas:
     runs-on: ubuntu-latest
@@ -13,10 +15,9 @@ jobs:
           python-version: "3.11"
       - name: Instalar dependencias
         run: pip install httpx
-      - name: Generar actas pendientes
+      - name: Generar actas desde Redis
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/generar_actas.py
