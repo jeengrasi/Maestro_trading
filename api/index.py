@@ -19,7 +19,13 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 redis = Redis(url=os.getenv("UPSTASH_REDIS_REST_URL"), token=os.getenv("UPSTASH_REDIS_REST_TOKEN"))
-alpaca_client = TradingClient(Config.ALPACA_API_KEY, Config.ALPACA_SECRET_KEY, paper=Config.ALPACA_PAPER)
+_alpaca_client = None
+
+def get_alpaca_client():
+    global _alpaca_client
+    if _alpaca_client is None:
+        _alpaca_client = TradingClient(Config.ALPACA_API_KEY, Config.ALPACA_SECRET_KEY, paper=Config.ALPACA_PAPER)
+    return _alpaca_client
 
 def bootstrap_nexus_memory(redis_client: Redis):
     try:
@@ -67,7 +73,7 @@ async def telegram_webhook(req: Request):
         await send_telegram(f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`", chat_id=chat_id)
         return {"ok": True}
     if text == "/balance":
-        acc = alpaca_client.get_account()
+        acc = get_alpaca_client().get_account()
         modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
         await send_telegram(f"📊 *CUENTA ALPACA ({modo})*\n\n💵 *Equity:* ${float(acc.equity):,.2f}\n💸 *Buying Power:* ${float(acc.buying_power):,.2f}", chat_id=chat_id)
         return {"ok": True}
