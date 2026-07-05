@@ -1,0 +1,8 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+alpaca-py==0.21.1
+httpx==0.27.0
+upstash-redis==1.0.0
+pandas
+pytz
+python-multipart
