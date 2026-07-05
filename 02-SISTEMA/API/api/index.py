@@ -175,6 +175,22 @@ async def telegram_webhook(req: Request):
         await send_telegram("🛑 *EMERGENCIA ACTIVADA*\n\nSistema pausado. Revisar logs.", chat_id=chat_id)
         return {"ok": True}
 
+    # ================================================
+    # COMANDO: /actualizar_bitacora
+    # ================================================
+    if text == "/actualizar_bitacora":
+        try:
+            from api.core.generar_bitacora import generar_bitacora
+            exito, msg = generar_bitacora()
+            if exito:
+                await send_telegram(f"✅ {msg}", chat_id=chat_id)
+            else:
+                await send_telegram(f"❌ Error: {msg}", chat_id=chat_id)
+            return {"ok": True}
+        except Exception as e:
+            await send_telegram(f"❌ Error: {str(e)}", chat_id=chat_id)
+            return {"ok": True}
+
     if text and not text.startswith("/"):
         try:
             from api.router import handle_parliament_debate, get_manager_recommendation, classify_intent, call_ia
