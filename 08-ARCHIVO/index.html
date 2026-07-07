@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de IA Open-Source (Nexus) - Activo</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración de la fuente Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at center, #1f2937, #000000);
+        }
+        /* Estilo para simular el brillo del monitor/terminal */
+        .ai-monitor {
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        .ai-text {
+            color: #10B981; /* green-500 */
+        }
+        .user-text {
+            color: #9CA3AF; /* gray-400 */
+        }
+        /* Cursor parpadeante */
+        @keyframes blink-cursor {
+            from { border-right-color: rgba(16, 185, 129, 0.75); }
+            to { border-right-color: transparent; }
+        }
+        .blinking-cursor {
+            border-right: 2px solid rgba(16, 185, 129, 0.75);
+            animation: blink-cursor 0.7s step-end infinite;
+        }
+        textarea:focus {
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+            border-color: #10B981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Contenedor Principal de la Aplicación -->
+    <div class="w-full max-w-4xl bg-gray-900 rounded-xl ai-monitor overflow-hidden flex flex-col h-[90vh]">
+
+        <!-- Encabezado del Monitor -->
+        <header class="bg-gray-800 p-4 border-b-2 border-green-500/50 flex justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-green-400 flex items-center">
+                <span class="mr-2 text-3xl">🤖</span> Nexus Monitor RAG <span class="ml-4 text-xs bg-green-700/50 px-2 py-0.5 rounded-full text-green-200 hidden sm:inline">24/7 LIVE</span>
+            </h1>
+            <div id="status-indicator" class="text-xs font-semibold px-3 py-1 rounded-full bg-red-800 text-red-300">OFFLINE</div>
+        </header>
+
+        <!-- Área de Conversación (Monitor) -->
+        <main id="chat-window" class="flex-grow p-4 overflow-y-auto space-y-4 text-sm sm:text-base scroll-smooth">
+            <div class="flex flex-col">
+                <p class="ai-text font-semibold">Nexus Core:</p>
+                <div class="text-gray-300 bg-gray-800 p-3 rounded-lg max-w-3xl">
+                    <p>Iniciando sistema... <span class="blinking-cursor" id="initial-cursor"></span></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Formulario de Entrada -->
+        <footer class="p-4 bg-gray-800 border-t-2 border-green-500/50">
+            <form id="chat-form" class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <textarea 
+                    id="user-input" 
+                    rows="1"
+                    class="flex-grow p-3 bg-gray-700 text-gray-100 rounded-lg resize-none placeholder-gray-400 focus:outline-none transition duration-200"
+                    placeholder="Pregunta a Nexus (Ej: ¿Cuál es el Build Command de Render?)"
+                    autocomplete="off"
+                ></textarea>
+                <button 
+                    type="submit" 
+                    id="send-button"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-1 sm:mt-0 shadow-lg shadow-green-500/30"
+                >
+                    Enviar
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <!-- JavaScript para la interacción y conexión con la API de Render -->
+    <script>
+        // CONFIGURACIÓN CLAVE: URL de la API de Render
+        const RAG_API_BASE_URL = "https://nexus-ai-core.onrender.com"; 
+        
+        const chatWindow = document.getElementById('chat-window');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const statusIndicator = document.getElementById('status-indicator');
+
+        // --- Efectos y UI ---
+        function typeTextEffect(targetElement, text, callback) {
+            targetElement.innerHTML = '';
+            let i = 0;
+            const cursorSpan = document.createElement('span');
+            cursorSpan.className = 'blinking-cursor';
+
+            function type() {
+                if (i < text.length) {
+                    targetElement.innerHTML += text.charAt(i);
+                    targetElement.appendChild(cursorSpan);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    i++;
+                    setTimeout(type, 15); // Velocidad de escritura
+                } else {
+                    cursorSpan.remove();
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function appendMessage(sender, text, sources = []) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'flex flex-col';
+            
+            const senderP = document.createElement('p');
+            senderP.className = sender === 'ai' ? 'ai-text font-semibold' : 'user-text font-semibold';
+            senderP.textContent = sender === 'ai' ? 'Nexus Core:' : 'Tú:';
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = sender === 'ai' 
+                ? 'text-gray-300 bg-gray-800 p-3 rounded-lg max-w-3xl' 
+                : 'text-gray-900 bg-gray-400 p-3 rounded-lg max-w-3xl self-end user-text';
+            
+            messageContainer.appendChild(senderP);
+            messageContainer.appendChild(textDiv);
+
+            chatWindow.appendChild(messageContainer);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            if (sender === 'ai') {
+                // Para IA, aplica el efecto de escritura y añade las fuentes
+                typeTextEffect(textDiv, text, () => {
+                    if (sources.length > 0) {
+                        const sourceP = document.createElement('p');
+                        sourceP.className = 'mt-2 text-xs text-green-300 opacity-75 italic';
+                        sourceP.textContent = ;
+                        textDiv.appendChild(sourceP);
+                    }
+                });
+            } else {
+                textDiv.textContent = text;
+            }
+        }
+
+        // --- Lógica de Conexión de API ---
+
+        async function checkStatus() {
+            try {
+                const response = await fetch();
+                const data = await response.json();
+                
+                if (data.status === 'ready') {
+                    statusIndicator.textContent = 'LIVE';
+                    statusIndicator.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-green-700 text-green-300';
+                    document.getElementById('initial-cursor').remove();
+                    return true;
+                }
+            } catch (error) {
+                console.error("API Status Check Failed:", error);
+            }
+            statusIndicator.textContent = 'OFFLINE';
+            statusIndicator.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-800 text-red-300';
+            return false;
+        }
+
+        // --- Manejo del Formulario ---
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = userInput.value.trim();
+            if (!question) return;
+
+            // Deshabilitar la entrada y botón
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            
+            // 1. Mostrar mensaje del usuario
+            appendMessage('user', question);
+            userInput.value = '';
+
+            // 2. Mostrar mensaje de carga de la IA
+            appendMessage('ai', 'Procesando consulta RAG...');
+            const lastAiMessage = chatWindow.lastChild.querySelector('div');
+            
+            // 3. Enviar a la API de Render
+            try {
+                const response = await fetch(, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: 'jeengras1-monitor', // ID simulado
+                        question: question,
+                        chat_history: []
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Limpiar el mensaje de carga antes de mostrar la respuesta real
+                lastAiMessage.textContent = ''; 
+
+                if (response.ok) {
+                    // Mostrar respuesta RAG con fuentes
+                    appendMessage('ai', data.response, data.sources);
+                } else {
+                    // Manejar errores de API (ej: API Key no configurada)
+                    appendMessage('ai', );
+                }
+
+            } catch (error) {
+                // Manejar errores de red o CORS
+                console.error('Error en la petición al servidor:', error);
+                lastAiMessage.textContent = '';
+                appendMessage('ai', '[ERROR DE CONEXIÓN] No se pudo conectar al Cerebro RAG. Verifique la URL de Render y el estado "LIVE".');
+            } finally {
+                // Habilitar la entrada
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        });
+
+        // --- Inicialización ---
+        window.onload = () => {
+            // Eliminar el cursor de la bienvenida temporal
+            document.getElementById('initial-cursor').remove();
+            
+            // Revisa el estado cada 10 segundos
+            setInterval(checkStatus, 10000); 
+            // Revisa el estado inmediatamente
+            checkStatus();
+            
+            // Mensaje de bienvenida real
+            appendMessage('ai', 'Bienvenido a Nexus Core. Soy tu monitor de IA Open-Source. Mi conocimiento proviene de los documentos de tu repositorio de GitHub. Pregúntame, por ejemplo: "¿Cuál es mi build command en Render?"', []);
+            
+            // Ajuste de altura del textarea (para que sea responsivo)
+            userInput.addEventListener('input', () => {
+                userInput.style.height = 'auto';
+                userInput.style.height = (userInput.scrollHeight) + 'px';
+            });
+        };
+
+    </script>
+</body>
+</html>
