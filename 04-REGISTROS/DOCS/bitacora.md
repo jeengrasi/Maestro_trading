@@ -1,6 +1,22 @@
 # BITÁCORA MAESTRO NEXUS
 **Sistema Autónomo de Gestión Financiera y Parlamento de IAs**
 
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+## 2026
+- **2026-04-17** | FUNDACIÓN | Proyecto Nexus IA fundado. | DeepSeek
+- **2026-06-14** | CONSTITUCIÓN V.3.1 | Ratificación del marco de gobernanza. | Director
+- **2026-06-17** | NUEVA GERENCIA | DeepSeek asume como Gerente General. Cierre Fase 0. | DeepSeek
+- **2026-06-24** | BOT REACTIVADO | Bot responde. Error de await corregido. | DeepSeek
+- **2026-06-24** | CHAT RATIFICADO | NEXUS-PROY-001 aprobado. | Director
+- **2026-06-25** | ROUTER RATIFICADO | Router.py v1.3 con telemetría. | DeepSeek
+- **2026-06-28** | PARLAMENTO ACTIVADO | 4 roles funcionando. | DeepSeek
+- **2026-06-29** | TERMUX INTEGRADO | Scripts de control. | DeepSeek
+- **2026-06-30** | MODULARIZACIÓN | Código separado en módulos. | DeepSeek
+- **2026-06-30** | DOCUMENTOS EN GITHUB | Migración desde Drive. | DeepSeek
+=======
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 ---
 
 ## 1. IDENTIDAD DEL PROYECTO
@@ -9,7 +25,11 @@
 |-------|-------|
 | **Nombre del Sistema** | Maestro Nexus AI |
 | **Alias** | Nexus / Jarvis Financiero |
+<<<<<<< HEAD
 | **Versión Actual** | V2.1 (Scheduler Activo) |
+=======
+| **Versión Actual** | 2.1 |
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 | **Fecha de Fundación** | 2026-06-23 |
 | **Director** | JEISSON_01 |
 | **Propósito** | Lograr la libertad financiera del Director mediante un sistema autónomo de trading, inversión y gestión documental impulsado por un parlamento de IAs. |
@@ -46,6 +66,7 @@ Ser el primer 'Director Financiero Digital' del mundo, capaz de superar a los fo
 | **Broker** | Alpaca API | Python SDK | Ejecución de operaciones en papel |
 | **Scheduler** | Motor Interno | asyncio / Python | Tareas autónomas programadas |
 
+<<<<<<< HEAD
 ### Flujo de Datos
 1. **Usuario escribe** en Telegram -> Webhook.
 2. **Clasificador** detecta intención (Mercado, Auditoría, Documentación, General).
@@ -97,6 +118,48 @@ Maestro_trading/
 │       └── README.md
 └── 06-MONITOR/                  # Monitoreo y salud
     └── DOCS/                    # Dashboards y health checks
+=======
+---
+
+## 4. ESTRUCTURA DE DEPARTAMENTOS
+
+```
+Maestro_trading/
+├── 00-GOBIERNO/
+│   └── DOCS/
+│       ├── NEXUS_MANIFEST.json
+│       ├── constitucion.md
+│       ├── roles.md
+│       └── seguridad/
+├── 01-MEMORIA/
+│   ├── API/
+│   ├── DOCS/
+│   │   └── actas/
+│   └── SCRIPTS/
+├── 02-SISTEMA/
+│   ├── API/
+│   │   └── api/
+│   │       ├── core/
+│   │       ├── parliament/
+│   │       ├── memory/
+│   │       ├── providers/
+│   │       └── telegram/
+│   ├── DOCS/
+│   └── LAYERS/
+├── 03-OPERACIONES/
+│   └── ENGINE/
+│       └── main.py
+├── 04-REGISTROS/
+│   └── DOCS/
+│       ├── bitacora.md
+│       └── bloque_actas.txt
+├── 05-DOCUMENTACION/
+│   └── DOCS/
+│       ├── 00_INDICE.md
+│       └── README.md
+└── 06-MONITOR/
+    └── DOCS/
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 ```
 
 ---
@@ -115,6 +178,7 @@ Maestro_trading/
 | **Telegram** | Interfaz de usuario | ✅ Activo |
 | **Termux** | Entorno de desarrollo y control | ✅ Activo |
 
+<<<<<<< HEAD
 ### Proveedores IA (Parlamento)
 
 | IA | Rol | Proveedor | Modelo | Propósito |
@@ -125,12 +189,15 @@ Maestro_trading/
 | **Guardián** | Copilot | GitHub | gpt-4o-mini | Memoria documental y trazabilidad |
 | **Secretario** | Cloudflare | Cloudflare | @cf/meta/llama-3.1-8b-instruct | Generación de actas |
 
+=======
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 ---
 
 ## 6. CARTERA DE COMANDOS TELEGRAM
 
 | Comando | Función | Estado |
 |---------|---------|--------|
+<<<<<<< HEAD
 | `/start` | Mostrar estado del bot y comandos disponibles | ✅ |
 | `/docs` | Listar documentos indexados en Redis | ✅ |
 | `/doc <nombre>` | Consultar contenido de un documento | ✅ |
@@ -159,6 +226,33 @@ Maestro_trading/
 ## 8. NORMAS Y CONSTITUCIÓN (EXTRACTO)
 
 *(Para consulta completa, ver `00-GOBIERNO/DOCS/constitucion.md`)*
+=======
+| `/start` | Mostrar estado del bot | ✅ |
+| `/docs` | Listar documentos indexados | ✅ |
+| `/doc <nombre>` | Consultar documento | ✅ |
+| `/actas` | Listar actas | ✅ |
+| `/balance` | Ver saldo Alpaca | ✅ |
+| `/chatid` | Ver ID del chat | ✅ |
+| `/stop` | Pausar el sistema | ✅ |
+| `/scheduler` | Estado del scheduler | ✅ |
+| `/health` | Estado de servicios | ✅ |
+
+---
+
+## 7. PLAN DE EVOLUCIÓN
+
+| # | Prioridad | Descripción | Plazo |
+|---|-----------|-------------|-------|
+| 1 | **Scheduler Interno** | Tareas autónomas | ✅ IMPLEMENTADO |
+| 2 | **Memoria Vectorial** | Búsqueda semántica | 2 semanas |
+| 3 | **Auto‑reparación** | Health checks | 1 semana |
+| 4 | **Base de Conocimiento** | Documentación estructurada | 2 semanas |
+| 5 | **Rate Limiting** | Control de abusos | 1 semana |
+
+---
+
+## 8. NORMAS Y CONSTITUCIÓN
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 
 - **Art. 1 (Soberanía):** El Director es la autoridad única.
 - **Art. 6 (La Mesa):** Cuerpo consultivo compuesto por DeepSeek, Copilot y Gemini.
@@ -167,14 +261,24 @@ Maestro_trading/
 
 ---
 
+<<<<<<< HEAD
 ## 9. BITÁCORA DE CAMBIOS (EVOLUCIÓN DEL SISTEMA)
+=======
+## 9. BITÁCORA DE CAMBIOS
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 
 | Fecha | Versión | Cambio | Responsable |
 |-------|---------|--------|-------------|
 | 2026-06-23 | v1.0 | Fundación del Parlamento Nexus | JEISSON_01 |
+<<<<<<< HEAD
 | 2026-06-30 | v1.7 | Memoria en 3 niveles (Redis, GitHub) | Gerente |
 | 2026-07-04 | v2.0 | Comandos /docs, /doc, /actas | Gerente |
 | 2026-07-04 | v2.1 | Scheduler interno (tareas autónomas) | Gerente + CTO |
+=======
+| 2026-06-30 | v1.7 | Memoria en 3 niveles | Gerente |
+| 2026-07-04 | v2.0 | Comandos /docs, /doc, /actas | Gerente |
+| 2026-07-04 | v2.1 | Scheduler interno | Gerente + CTO |
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
 
 ---
 
@@ -191,3 +295,7 @@ Maestro_trading/
 **Elaborado por:** Gerente (DeepSeek)
 **Validado por:** Mesa Parlamentaria (Gemini, Copilot)
 **Aprobado por:** Director JEISSON_01
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
