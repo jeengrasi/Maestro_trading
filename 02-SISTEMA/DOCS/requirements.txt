@@ -6,3 +6,4 @@ upstash-redis==1.0.0
 pandas
 pytz
 python-multipart
+alpaca-py==0.21.1
