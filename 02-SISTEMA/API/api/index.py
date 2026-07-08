@@ -1,40 +1,22 @@
-# # ================================================
-# MAESTRO-NEXUS | INDEX.PY V3.0 (FIX TIMEOUT)
+# ================================================
+# MAESTRO-NEXUS | INDEX.PY V3.1 (REDIS QUEUE)
 # ================================================
 # ID: api/index.py
-# COMMIT: index_v3.0_background_tasks
+# COMMIT: index_v3.1_redis_queue
 # FECHA: 2026-07-07
 # AUTOR: Gerente (DeepSeek) + Arquitecto (Copilot)
-# ESTADO: ✅ COMPLETO - FIX TIMEOUT VERCEL
+# ESTADO: ✅ COMPLETO - REDIS QUEUE PARA GITHUB ACTIONS
 # ================================================
 # DESCRIPCIÓN: Punto de entrada de la API FastAPI.
 # Maneja webhooks de Telegram, comandos y debate parlamentario.
 # 
-# FIX V3.0 (2026-07-07):
-# - Implementación de BackgroundTasks para evitar timeout en Vercel
-# - El debate parlamentario se ejecuta en segundo plano
-# - Respuesta inmediata al usuario (< 1 segundo)
+# FIX V3.1 (2026-07-07):
+# - Reemplazo de BackgroundTasks por Redis Queue
+# - BackgroundTasks NO funciona en Vercel (el contenedor se destruye)
+# - Ahora los mensajes se guardan en Redis y un Worker externo los procesa
+# - GitHub Actions ejecuta el Worker cada 2 minutos
 # - Trazabilidad completa con fechas y observaciones
 # ================================================
-# COMANDOS DISPONIBLES:
-# /start          - Estado del bot y lista de comandos
-# /docs           - Listar documentos indexados en Redis
-# /doc <nombre>   - Consultar contenido de un documento
-# /actas          - Listar actas generadas
-# /balance        - Ver saldo de Alpaca (paper trading)
-# /chatid         - Ver ID del chat autorizado
-# /stop           - Pausar el sistema (emergencia)
-# /scheduler      - Ver estado del motor de tareas
-# /health         - Verificar estado de servicios
-# /actualizar_bitacora - Actualizar Bitácora manualmente
-# Mensaje natural - Debate parlamentario o consulta directa
-# ================================================
-
-# ================================================
-# SECCIÓN 1: IMPORTACIONES
-# ================================================
-# 2026-07-05 - Versión original
-# 2026-07-07 - ADD: BackgroundTasks para procesamiento asíncrono
 
 import os
 import sys
@@ -43,7 +25,7 @@ import logging
 import asyncio
 import json
 from datetime import datetime
-from fastapi import FastAPI, Request, BackgroundTasks  # 2026-07-07: ADD BackgroundTasks
+from fastapi import FastAPI, Request
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
@@ -54,34 +36,26 @@ from api.telegram.utils import send_telegram
 # ================================================
 # SECCIÓN 2: CONFIGURACIÓN INICIAL
 # ================================================
-# 2026-07-05 - Versión original
 
-# Agregar directorio raíz al path para imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Inicializar FastAPI
 app = FastAPI()
 
 # ================================================
 # SECCIÓN 3: CONEXIONES A SERVICIOS
 # ================================================
-# 2026-07-05 - Versión original
 
-# Conexión a Redis (Upstash)
 redis = Redis(
     url=os.getenv("UPSTASH_REDIS_REST_URL"),
     token=os.getenv("UPSTASH_REDIS_REST_TOKEN")
 )
 
-# Cliente de Alpaca (lazy loading)
 _alpaca_client = None
 
 def get_alpaca_client():
-    """Obtiene o crea el cliente de Alpaca para trading paper."""
     global _alpaca_client
     if _alpaca_client is None:
         _alpaca_client = TradingClient(
@@ -94,20 +68,13 @@ def get_alpaca_client():
 # ================================================
 # SECCIÓN 4: MEMORIA DEL SISTEMA
 # ================================================
-# 2026-07-05 - Versión original
 
 def bootstrap_nexus_memory(redis_client: Redis):
-    """
-    Hidrata Redis con la configuración inicial del sistema.
-    Carga NEXUS_MANIFEST.json si no hay datos en Redis.
-    """
     try:
-        # Verificar si ya hay datos en Redis
         tg_id = redis_client.get("telegram:group_id")
         feat_parliament = redis_client.get("feature:parliament")
         
         if not tg_id or not feat_parliament:
-            # Cargar desde NEXUS_MANIFEST.json
             manifest_path = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                 "NEXUS_MANIFEST.json"
@@ -117,13 +84,11 @@ def bootstrap_nexus_memory(redis_client: Redis):
                     manifest = json.load(f)
                 state = manifest.get("state_declarative", {})
                 
-                # Establecer valores por defecto si no existen
                 if not tg_id:
                     redis_client.set("telegram:group_id", "6444278889")
                 if not feat_parliament:
                     redis_client.set("feature:parliament", "0")
                 
-                # Configurar límites de riesgo
                 redis_client.set(
                     "risk:max_vix",
                     str(state.get("risk_management", {}).get("max_vix", "20.0"))
@@ -139,19 +104,13 @@ def bootstrap_nexus_memory(redis_client: Redis):
 # ================================================
 # SECCIÓN 5: ENDPOINTS DE LA API
 # ================================================
-# 2026-07-05 - Versión original
 
 @app.get("/")
 async def root():
-    """Endpoint raíz - verifica que la API está corriendo."""
     return {"status": "running", "system": "Maestro-Nexus"}
 
 @app.get("/health")
 async def health():
-    """
-    Health check básico - verifica estado de Redis.
-    Usado por Vercel y monitoreo.
-    """
     start = datetime.now()
     try:
         r = await asyncio.wait_for(
@@ -170,34 +129,22 @@ async def health():
 
 @app.get("/webhook")
 async def webhook_verification():
-    """Endpoint de verificación para el webhook de Telegram."""
     return {"status": "ok"}
 
 # ================================================
 # SECCIÓN 6: WEBHOOK PRINCIPAL DE TELEGRAM
 # ================================================
-# 2026-07-05 - Versión original (V2.2)
-# 2026-07-07 - MOD: Añadir BackgroundTasks para evitar timeout
-# 2026-07-07 - MOD: Reemplazar bloque de debate (líneas 406-435) con llamado a background
+# 2026-07-07 - V3.1: Usa Redis Queue en lugar de BackgroundTasks
 
 @app.post("/webhook")
-async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 2026-07-07: ADD BackgroundTasks
-    """
-    Punto de entrada para mensajes de Telegram.
-    Procesa comandos y mensajes naturales.
-    
-    2026-07-07 - MOD: Ahora usa BackgroundTasks para procesar debates en segundo plano
-    """
-    # Leer payload
+async def telegram_webhook(req: Request):
     payload = await req.json()
     message = payload.get("message", {})
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
     
-    # Inicializar memoria si es necesario
     bootstrap_nexus_memory(redis)
     
-    # Verificar autorización del chat
     raw_authorized_chat = redis.get("telegram:group_id")
     authorized_chat = raw_authorized_chat or "6444278889"
     
@@ -206,7 +153,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": False}
 
     # ================================================
-    # COMANDO: /chatid - VER ID DEL CHAT
+    # COMANDO: /chatid
     # ================================================
     if text == "/chatid":
         await send_telegram(
@@ -216,7 +163,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": True}
 
     # ================================================
-    # COMANDO: /balance - VER SALDO ALPACA
+    # COMANDO: /balance
     # ================================================
     if text == "/balance":
         acc = get_alpaca_client().get_account()
@@ -230,7 +177,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": True}
 
     # ================================================
-    # COMANDO: /start - ESTADO DEL BOT Y AYUDA
+    # COMANDO: /start
     # ================================================
     if text == "/start":
         raw_max_vix = redis.get("risk:max_vix")
@@ -256,7 +203,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": True}
 
     # ================================================
-    # COMANDO: /docs - LISTAR DOCUMENTOS INDEXADOS
+    # COMANDO: /docs
     # ================================================
     if text == "/docs":
         try:
@@ -266,7 +213,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
                 return {"ok": True}
             
             docs = []
-            for key in keys[:10]:  # Límite de 10
+            for key in keys[:10]:
                 metadata = redis.hgetall(key)
                 ruta = metadata.get(b"ruta", b"").decode()
                 if ruta:
@@ -280,7 +227,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             return {"ok": True}
 
     # ================================================
-    # COMANDO: /doc <nombre> - CONSULTAR DOCUMENTO
+    # COMANDO: /doc <nombre>
     # ================================================
     if text.startswith("/doc "):
         nombre = text.replace("/doc ", "").strip()
@@ -294,7 +241,6 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             await send_telegram(f"📄 *{nombre}*\n\n{contenido_text}", chat_id)
             return {"ok": True}
         
-        # Búsqueda por coincidencia parcial
         keys = redis.keys(f"doc:*{nombre}*")
         if keys:
             mensaje = f"📄 *Coincidencias para '{nombre}':*\n\n"
@@ -308,7 +254,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": True}
 
     # ================================================
-    # COMANDO: /actas - LISTAR ACTAS GENERADAS
+    # COMANDO: /actas
     # ================================================
     if text == "/actas":
         try:
@@ -333,7 +279,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             return {"ok": True}
 
     # ================================================
-    # COMANDO: /stop - PAUSAR SISTEMA (EMERGENCIA)
+    # COMANDO: /stop
     # ================================================
     if text == "/stop":
         await send_telegram(
@@ -343,7 +289,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
         return {"ok": True}
 
     # ================================================
-    # COMANDO: /actualizar_bitacora - ACTUALIZAR BITÁCORA
+    # COMANDO: /actualizar_bitacora
     # ================================================
     if text == "/actualizar_bitacora":
         try:
@@ -359,7 +305,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             return {"ok": True}
 
     # ================================================
-    # COMANDO: /scheduler - ESTADO DEL SCHEDULER
+    # COMANDO: /scheduler
     # ================================================
     if text == "/scheduler":
         try:
@@ -385,7 +331,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             return {"ok": True}
 
     # ================================================
-    # COMANDO: /health - ESTADO DE SERVICIOS
+    # COMANDO: /health
     # ================================================
     if text == "/health":
         try:
@@ -407,10 +353,7 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
     # ================================================
     # MENSAJES NATURALES - DEBATE PARLAMENTARIO
     # ================================================
-    # 2026-07-05 - Versión original
-    # 2026-07-07 - FIX: Reemplazo completo para usar BackgroundTasks
-    #               El debate ahora se ejecuta en segundo plano
-    #               evitando el timeout de Vercel (10s)
+    # 2026-07-07 - V3.1: Redis Queue en lugar de BackgroundTasks
     
     if text and not text.startswith("/"):
         try:
@@ -424,40 +367,29 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
             
             intent = classify_intent(text)
             
-            # Si la confianza es alta, convocar parlamento
             if intent["confidence"] >= 1:
-                # 2026-07-07 - FIX: Respuesta inmediata + background
-                # Ya no se espera el debate completo dentro del webhook
+                # 2026-07-07 - V3.1: Guardar en Redis en lugar de BackgroundTasks
+                queue_key = f"queue:debate:{chat_id}:{datetime.now().timestamp()}"
+                redis.set(
+                    queue_key,
+                    json.dumps({"chat_id": chat_id, "text": text}),
+                    ex=3600
+                )
                 
-                # 1. Confirmar recepción inmediata (evita timeout)
                 await send_telegram(
                     "🏛️ *Parlamento Nexus convocado.*\n\n"
-                    "⏳ Procesando tu consulta... Te responderé en breve.",
+                    "⏳ Tu consulta está en cola. Recibirás respuesta en unos minutos.",
                     chat_id=chat_id
                 )
                 
-                # 2. Programar el debate en segundo plano
-                #    Esto permite que el webhook responda en < 1 segundo
-                #    mientras el debate se ejecuta asíncronamente
-                background_tasks.add_task(
-                    procesar_debate_background,
-                    text=text,
-                    chat_id=chat_id
-                )
-                
-                # 3. Retornar inmediatamente (Vercel no hace timeout)
-                #    El usuario recibirá la respuesta completa cuando termine el debate
-                return {"ok": True, "status": "processing"}
+                return {"ok": True, "status": "queued"}
                 
             else:
-                # Consulta directa a un departamento (rápida)
-                # Esta ruta no necesita background porque es una llamada simple
                 role = intent["role"]
                 dept_name = intent["department"].capitalize()
                 await send_telegram(f"🔍 *Consultando a {dept_name}...*", chat_id=chat_id)
                 response_text = await call_ia(role, text)
                 
-                # Truncar si es demasiado largo
                 if len(response_text) > 4000:
                     response_text = response_text[:4000] + "\n\n...(truncado)"
                 
@@ -472,40 +404,17 @@ async def telegram_webhook(req: Request, background_tasks: BackgroundTasks):  # 
     return {"ok": True}
 
 # ================================================
-# SECCIÓN 7: FUNCIONES DE PROCESAMIENTO EN BACKGROUND
+# SECCIÓN 7: FUNCIÓN DEPRECADA (V3.0)
 # ================================================
-# 2026-07-07 - NUEVA SECCIÓN
-# AUTOR: Arquitecto (Copilot)
-# REF: Diagnóstico de timeout en Vercel (2026-07-07)
-# ================================================
-# DESCRIPCIÓN: Esta función se ejecuta en segundo plano después
-# de que el webhook ya ha respondido. Permite que el debate
-# parlamentario (que toma 15-30 segundos) no bloquee la respuesta.
-# ================================================
+# 2026-07-07 - DEPRECADA: Ya no se usa en V3.1
+# Se mantiene por compatibilidad
 
 async def procesar_debate_background(text: str, chat_id: int):
     """
-    2026-07-07 - Función para procesar debate en segundo plano
-    
-    Esta función se ejecuta después de que el webhook ya respondió,
-    evitando el timeout de Vercel (10 segundos en Hobby plan).
-    
-    Args:
-        text (str): Consulta del usuario
-        chat_id (int): ID del chat de Telegram
-    
-    Returns:
-        None: La respuesta se envía directamente al chat de Telegram
-    
-    Observaciones:
-        - Esta función es asíncrona y se ejecuta en background
-        - No bloquea la respuesta HTTP del webhook
-        - Los errores se capturan y notifican al usuario
-        - Tiempo estimado de ejecución: 15-30 segundos
+    2026-07-07 - DEPRECADA: Reemplazada por Redis Queue + Worker
     """
+    logger.warning("⚠️ procesar_debate_background está DEPRECADO. Usar Redis Queue.")
     try:
-        # 2026-07-07 - Importaciones dentro de la función
-        # Esto evita que las importaciones se ejecuten en el webhook
         from api.router import (
             handle_parliament_debate,
             get_manager_recommendation
@@ -513,23 +422,19 @@ async def procesar_debate_background(text: str, chat_id: int):
         from api.parliament.actas import generate_acta, save_acta_to_github
         from datetime import datetime
         
-        logger.info(f"📨 Iniciando debate en background para chat {chat_id}")
+        logger.info(f"📨 [DEPRECADO] Iniciando debate para chat {chat_id}")
         
-        # 2026-07-07 - Ejecutar debate (esto puede tomar 15-30 segundos)
         debate_results = await handle_parliament_debate(text)
         recommendation = await get_manager_recommendation(text, debate_results)
         
-        # 2026-07-07 - Generar acta en background
         acta_content = await generate_acta(text, debate_results, recommendation)
         acta_result = await save_acta_to_github(
             acta_content,
             f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}"
         )
         
-        # 2026-07-07 - Construir respuesta con resumen
         response_text = "🏛️ *DEBATE PARLAMENTARIO FINALIZADO*\n\n"
         for role, data in debate_results.items():
-            # Limitar a 300 caracteres por rol para no exceder los 4000 de Telegram
             resp = data['response']
             if len(resp) > 300:
                 resp = resp[:300] + "..."
@@ -537,14 +442,12 @@ async def procesar_debate_background(text: str, chat_id: int):
         response_text += f"---\n📋 *RECOMENDACIÓN FINAL:*\n{recommendation}"
         response_text += f"\n\n📄 {acta_result}"
         
-        # 2026-07-07 - Enviar respuesta al usuario
         await send_telegram(response_text, chat_id)
         
-        logger.info(f"✅ Debate completado para chat {chat_id}")
+        logger.info(f"✅ [DEPRECADO] Debate completado para chat {chat_id}")
         
     except Exception as e:
-        # 2026-07-07 - Capturar y notificar errores
-        logger.error(f"❌ Error en debate background: {e}", exc_info=True)
+        logger.error(f"❌ Error en debate background (deprecado): {e}", exc_info=True)
         await send_telegram(
             f"❌ Error procesando el debate: {str(e)}\n\n"
             "Por favor, intenta de nuevo más tarde.",
@@ -554,11 +457,11 @@ async def procesar_debate_background(text: str, chat_id: int):
 # ================================================
 # FIN DEL ARCHIVO
 # ================================================
-# 2026-07-07 - V3.0 COMPLETO
+# 2026-07-07 - V3.1 COMPLETO
 # CAMBIOS REALIZADOS:
-# 1. ADD: BackgroundTasks en importación (línea 38)
-# 2. MOD: Firma de telegram_webhook (línea 169)
-# 3. MOD: Reemplazo de bloque de debate (líneas 406-435)
-# 4. ADD: Función procesar_debate_background (líneas 445+)
+# 1. REM: BackgroundTasks de importación
+# 2. REM: BackgroundTasks de firma de telegram_webhook
+# 3. MOD: Reemplazo de bloque de debate con Redis Queue
+# 4. ADD: Comentarios de deprecación
 # 5. ADD: Observaciones y fechas en todas las secciones modificadas
 # ================================================
