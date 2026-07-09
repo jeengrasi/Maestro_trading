@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint = "02-SISTEMA.API.api.index:app"

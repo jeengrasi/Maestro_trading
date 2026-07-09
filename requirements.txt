@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+httpx
+upstash-redis
+alpaca-py
