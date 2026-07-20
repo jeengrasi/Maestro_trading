@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "builds": [{"src": "api/index.py", "use": "@vercel/python", "config": {"maxDuration": 30}}],
+  "rewrites": [{"source": "/(.*)", "destination": "api/index.py"}]
+}

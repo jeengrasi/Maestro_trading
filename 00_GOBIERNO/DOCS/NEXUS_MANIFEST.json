@@ -1,0 +1,34 @@
+{
+  "project": "Nexus IA - Maestro Trading",
+  "version": "1.0.0",
+  "meta_state": "ACTIVE",
+  "governance": {
+    "director_id": "JEISSON_01",
+    "roles": {
+      "cto": "Gemini-1.5-Pro",
+      "sre": "Meta-Llama-3-SRE",
+      "moderator": "Copilot-ChatOps"
+    },
+    "parliament_rules": [
+      "PR_01: Prohibido modificar index.py o lock.py sin Ficha Tecnica firmada",
+      "PR_02: Toda decision de enrutamiento exige dictamen cruzado CTO+SRE",
+      "PR_03: Los tokens de bypass de Vercel quedan vetados en entornos transaccionales"
+    ]
+  },
+  "infrastructure_map": {
+    "production_domain": "maestro-trading.vercel.app",
+    "environment": "Vercel-Serverless-Python3.10",
+    "endpoints": {
+      "health_check": "/health",
+      "telegram_gateway": "/webhook"
+    }
+  },
+  "state_declarative": {
+    "telegram_group_id": "6444278889",
+    "feature_parliament": "1",
+    "risk_management": {
+      "max_vix": "20.0",
+      "risk_per_trade": "0.01"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+name: Generar Actas del Parlamento
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  generar-actas:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        run: pip install httpx
+      - name: Generar actas desde Redis
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: python3 scripts/generar_actas.py
+      - name: Commit y push
+        run: |
+          git config --global user.name "Nexus Bot"
+          git config --global user.email "bot@nexus.ai"
+          git add docs/actas/
+          git diff --staged --quiet || (git commit -m "Acta automática $(date +%Y%m%d-%H%M)" && git push)

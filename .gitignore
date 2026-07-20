@@ -1,0 +1,12 @@
+*.env
+.nexus/
+.nexus_secrets*
+vault.env
+node_modules/
+__pycache__/
+*.bin
+*.pt
+*.sqlite
+.npm/
+.cache/
+.tor/
