@@ -10,3 +10,13 @@ __pycache__/
 .npm/
 .cache/
 .tor/
+
+# BAUL LOCAL - NUNCA SUBIR
+99_RESCATE_LOCAL/
+*.log
+*.tmp
+*.bak
+*.zip
+*.tar.gz
+*.sqlite
+*.db
