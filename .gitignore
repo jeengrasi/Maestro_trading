@@ -1,22 +1,11 @@
-*.env
-.nexus/
-.nexus_secrets*
-vault.env
-node_modules/
-__pycache__/
-*.bin
-*.pt
-*.sqlite
-.npm/
-.cache/
-.tor/
+# Blindaje definitivo de archivos masivos
+.bun/
+.deno/
+.ollama/
+.bun/
+.deno/
+.ollama/
 
-# BAUL LOCAL - NUNCA SUBIR
-99_RESCATE_LOCAL/
-*.log
-*.tmp
-*.bak
-*.zip
-*.tar.gz
-*.sqlite
-*.db
+.deno/
+.ollama/
+.bun/
