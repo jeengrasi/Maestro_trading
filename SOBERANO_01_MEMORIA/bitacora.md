@@ -299,3 +299,4 @@ Maestro_trading/
 =======
 >>>>>>> Stashed changes
 >>>>>>> 1288a41 (feat: implementar generador de Bitácora (plantilla + script Python + bitácora generada))
+[2026-07-24 18:51:45] [EAD] Promulgación e instalación de Constitución Magna v7.1 en SOBERANO_00_GOBIERNO/CONSTITUCION.md (v4.0 eliminada, worker.yml relocalizado)
