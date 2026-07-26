@@ -8,5 +8,6 @@ class Config:
     ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
     MAX_VIX = float(os.getenv("MAX_VIX", "20.0"))
     RISK_PER_TRADE = float(os.getenv("RISK_PER_TRADE", "0.01"))
+    AUTO_EJECUCION = os.getenv("AUTO_EJECUCION", "false").lower() == "true"
     UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
     UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
