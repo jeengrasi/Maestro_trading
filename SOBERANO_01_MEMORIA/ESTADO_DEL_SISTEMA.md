@@ -5,10 +5,10 @@ type: Estado_Sistema
 status: SEMAFORO_VERDE
 ---
 # 📸 ESTADO ACTUAL DEL SISTEMA PARLAMENTO NEXUS
-Fecha de actualización: 2026-07-25 08:21:58
+Fecha de actualización: 2026-07-25 22:47:23
 Rama activa: soberano-v1
 Semaforo Trading: VERDE 🟢
-Tasa de Exito: 100% (17/17)
+Tasa de Exito: 100% (25/25)
 
 ## 📊 Archivos por Departamento
 SOBERANO_00_GOBIERNO/CONSTITUCION.md
@@ -28,6 +28,8 @@ SOBERANO_01_MEMORIA/AUDITS/AUDITORIA_TOTAL_CONSOLIDACION_2026-07-22_23:21:28.md
 SOBERANO_01_MEMORIA/AUDITS/AUDITS_2026_07.md
 SOBERANO_01_MEMORIA/AUDITS/INVENTARIO_GITHUB_REMOTO_2026-07-22_22:54:13.md
 SOBERANO_01_MEMORIA/AUDITS/VALIDACION_GOBIERNO_2026-07-22_23-32-09.md
+SOBERANO_01_MEMORIA/BACKUPS_JARVIS/backup_nexus-v3.0-20260726_0214_UTC.tar.gz
+SOBERANO_01_MEMORIA/BACKUPS_JARVIS/backup_nexus-v3.0-20260726_0223_UTC.tar.gz
 SOBERANO_01_MEMORIA/ESTADO_DEL_SISTEMA.md
 SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/actualizar_cli_v1.1.sh
 SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/actualizar_cli_v2.0_final.sh
@@ -66,23 +68,25 @@ SOBERANO_01_MEMORIA/NORMATIVA_DEPARTAMENTAL.md
 SOBERANO_01_MEMORIA/README_LEGACY.md
 SOBERANO_01_MEMORIA/RESCATE/EVIDENCIA_MIGRACION.md
 SOBERANO_01_MEMORIA/RESCATE/MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md
+SOBERANO_01_MEMORIA/ROADMAP.md
 SOBERANO_01_MEMORIA/bitacora.md
 SOBERANO_01_MEMORIA/contexto_nexus_20260705_1943.md
 SOBERANO_02_CORE/NORMATIVA_DEPARTAMENTAL.md
-SOBERANO_02_CORE/core/__pycache__/generar_bitacora.cpython-313.pyc
-SOBERANO_02_CORE/core/__pycache__/scheduler.cpython-313.pyc
 SOBERANO_02_CORE/core/generar_bitacora.py
 SOBERANO_02_CORE/core/scheduler.py
 SOBERANO_03_NEXUS/NORMATIVA_DEPARTAMENTAL.md
 SOBERANO_03_NEXUS/__pycache__/index.cpython-313.pyc
-SOBERANO_03_NEXUS/__pycache__/nexus_bridge.cpython-313.pyc
-SOBERANO_03_NEXUS/__pycache__/rastrear_rutas_ead.cpython-313.pyc
 SOBERANO_03_NEXUS/__pycache__/router.cpython-313.pyc
 SOBERANO_03_NEXUS/config.py
 SOBERANO_03_NEXUS/frontend/app.js
 SOBERANO_03_NEXUS/frontend/index.html
 SOBERANO_03_NEXUS/index.py
 SOBERANO_03_NEXUS/nexus_bridge.py
+SOBERANO_03_NEXUS/parliament/__pycache__/actas.cpython-313.pyc
+SOBERANO_03_NEXUS/parliament/__pycache__/classifier.cpython-313.pyc
+SOBERANO_03_NEXUS/parliament/__pycache__/core.cpython-313.pyc
+SOBERANO_03_NEXUS/parliament/__pycache__/debate.cpython-313.pyc
+SOBERANO_03_NEXUS/parliament/__pycache__/manager.cpython-313.pyc
 SOBERANO_03_NEXUS/parliament/actas.py
 SOBERANO_03_NEXUS/parliament/classifier.py
 SOBERANO_03_NEXUS/parliament/core.py

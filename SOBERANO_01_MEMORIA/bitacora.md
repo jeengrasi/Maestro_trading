@@ -314,3 +314,7 @@ Maestro_trading/
 [2026-07-25 08:21:55] [VEEDURIA PASS] SOBERANO_03_NEXUS/index.py supero los 5 filtros en 0ms.
 [2026-07-25 08:21:58] [VEEDURIA PASS] SOBERANO_03_NEXUS/router.py supero los 5 filtros en 0ms.
 [2026-07-25 08:21:59] [PASS] [RASTREO_EAD] Rastreos encontrados: 16 líneas de importación.
+[2026-07-25 22:44:37] [VEEDURIA PASS] SOBERANO_03_NEXUS/index.py superó los 5 filtros + Constitución en 0ms.
+[2026-07-25 22:46:04] [VEEDURIA PASS] SOBERANO_03_NEXUS/index.py superó los 5 filtros + Constitución en 0ms.
+[2026-07-25 22:46:55] [VEEDURIA PASS] SOBERANO_03_NEXUS/index.py superó los 5 filtros + Constitución en 0ms.
+[2026-07-25 22:47:23] [VEEDURIA PASS] SOBERANO_03_NEXUS/index.py superó los 5 filtros + Constitución en 0ms.
