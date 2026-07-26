@@ -1,0 +1,6 @@
+0 * * * * bash ~/soda/engine/economy/run_metrics.sh
+*/15 * * * * bash ~/soda/engine/economy/run_portfolio.sh
+0 * * * * bash ~/soda/02-SCRIPTS/MODULES/ECONOMY/mean_reversion_master.sh
+0 * * * * bash ~/soda/02-SCRIPTS/MODULES/ECONOMY/mean_reversion_master.sh
+5 * * * * bash ~/soda/02-SCRIPTS/MODULES/ECONOMY/trend_master.sh
+10 * * * * bash ~/soda/02-SCRIPTS/MODULES/ECONOMY/breakout_master.sh

@@ -30,8 +30,8 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 from upstash_redis import Redis
-from api.config import Config
-from api.telegram.utils import send_telegram
+from SOBERANO_03_NEXUS.config import Config
+from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 
 # ================================================
 # SECCIÓN 2: CONFIGURACIÓN INICIAL
@@ -293,7 +293,7 @@ async def telegram_webhook(req: Request):
     # ================================================
     if text == "/actualizar_bitacora":
         try:
-            from api.core.generar_bitacora import generar_bitacora
+            from SOBERANO_02_CORE.core.generar_bitacora import generar_bitacora
             exito, msg = generar_bitacora()
             if exito:
                 await send_telegram(f"✅ {msg}", chat_id=chat_id)
@@ -309,7 +309,7 @@ async def telegram_webhook(req: Request):
     # ================================================
     if text == "/scheduler":
         try:
-            from api.core.scheduler import get_scheduler
+            from SOBERANO_02_CORE.core.scheduler import get_scheduler
             scheduler = get_scheduler()
             if scheduler:
                 status = scheduler.get_status()
@@ -335,7 +335,7 @@ async def telegram_webhook(req: Request):
     # ================================================
     if text == "/health":
         try:
-            from api.core.scheduler import get_scheduler
+            from SOBERANO_02_CORE.core.scheduler import get_scheduler
             servicios = {
                 "Redis": "✅ Activo" if redis.ping() else "❌ Inactivo",
                 "Alpaca": "✅ Activo" if get_alpaca_client() else "❌ Inactivo",
@@ -357,13 +357,13 @@ async def telegram_webhook(req: Request):
     
     if text and not text.startswith("/"):
         try:
-            from api.router import (
+            from SOBERANO_03_NEXUS.router import (
                 handle_parliament_debate,
                 get_manager_recommendation,
                 classify_intent,
                 call_ia
             )
-            from api.parliament.actas import generate_acta, save_acta_to_github
+            from SOBERANO_03_NEXUS.parliament.actas import generate_acta, save_acta_to_github
             
             intent = classify_intent(text)
             
@@ -415,11 +415,11 @@ async def procesar_debate_background(text: str, chat_id: int):
     """
     logger.warning("⚠️ procesar_debate_background está DEPRECADO. Usar Redis Queue.")
     try:
-        from api.router import (
+        from SOBERANO_03_NEXUS.router import (
             handle_parliament_debate,
             get_manager_recommendation
         )
-        from api.parliament.actas import generate_acta, save_acta_to_github
+        from SOBERANO_03_NEXUS.parliament.actas import generate_acta, save_acta_to_github
         from datetime import datetime
         
         logger.info(f"📨 [DEPRECADO] Iniciando debate para chat {chat_id}")

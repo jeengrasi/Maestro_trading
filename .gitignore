@@ -1,11 +1,26 @@
-# Blindaje definitivo de archivos masivos
-.bun/
-.deno/
-.ollama/
-.bun/
-.deno/
-.ollama/
+# Archivos de sistema y entorno
+.cache/
+.npm/
+.lesshst
+.termux/
+.termux_backup_temp/
+.tor/
+node_modules/
 
-.deno/
-.ollama/
-.bun/
+# Credenciales y Secretos (Art. 12)
+*.env
+*.env.backup
+.nexus/
+.nexus_secrets
+.git-credentials
+.termux_authinfo
+
+# Temporales y Basura
+/Archivado:
+*.log
+/tmp/
+__pycache__/
+*.pyc
+.nexus_secrets
+.termux_backup_temp
+.config/gh/

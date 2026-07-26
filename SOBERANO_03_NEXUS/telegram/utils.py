@@ -1,5 +1,5 @@
 import httpx, logging, os
-from api.config import Config
+from SOBERANO_03_NEXUS.config import Config
 logger = logging.getLogger(__name__)
 
 async def send_telegram(text: str, chat_id: int = None):
