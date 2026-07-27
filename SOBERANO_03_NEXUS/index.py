@@ -593,7 +593,7 @@ async def diagnosticar_apis():
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 headers = {"APCA-API-KEY-ID": alpaca_key, "APCA-API-SECRET-KEY": alpaca_secret}
-                is_paper = os.getenv("ALPACA_PAPER", "true").lower() == "true"
+                is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
                 url = "https://paper-api.alpaca.markets/v2/account" if is_paper else "https://api.alpaca.markets/v2/account"
                 r = await client.get(url, headers=headers)
                 resultados["apis"]["Alpaca"] = {"estado": "✅ OK" if r.status_code == 200 else f"❌ FALLÓ ({r.status_code})", "clave": mask_key(alpaca_key), "modo": "Paper" if is_paper else "Real"}
@@ -644,3 +644,18 @@ async def diagnosticar_apis():
 #                     para flujo sincrono. (Ref: NORMAS.md, AUDIT-INDEX-2026-07-27.md)
 # [2026-07-07] DeepSeek/Copilot: Migracion inicial a V3.1 (Redis Queue).
 # ==============================================================================
+
+# ================================================
+# SECCIÓN 9: ENDPOINT DE DEBUG DE ENTORNO (SOLO LECTURA)
+# ================================================
+# [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: META, GEMINI]
+# MOTIVO: Permitir verificación en tiempo real de qué valores lee Vercel.
+# REF: AUDIT-401-ALPACA-VERCEL-META-005
+@app.get("/debug/env")
+async def debug_env():
+    return {
+        "ALPACA_API_KEY_prefix": os.getenv("ALPACA_API_KEY", "VACIA")[:2] if os.getenv("ALPACA_API_KEY") else "VACIA",
+        "ALPACA_PAPER_raw": repr(os.getenv("ALPACA_PAPER", "NO_ENCONTRADA")),
+        "ALPACA_PAPER_evaluado": Config.ALPACA_PAPER,
+        "TELEGRAM_TOKEN_len": len(os.getenv("TELEGRAM_BOT_TOKEN", ""))
+    }

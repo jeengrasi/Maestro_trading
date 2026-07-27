@@ -5,7 +5,7 @@ class Config:
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "6444278889")
     ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")
     ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")
-    ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
+    ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
     MAX_VIX = float(os.getenv("MAX_VIX", "20.0"))
     RISK_PER_TRADE = float(os.getenv("RISK_PER_TRADE", "0.01"))
     AUTO_EJECUCION = os.getenv("AUTO_EJECUCION", "false").lower() == "true"
