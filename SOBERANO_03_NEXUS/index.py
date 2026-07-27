@@ -425,9 +425,10 @@ async def telegram_webhook(req: Request):
                 # REF: Migración de bitácora de archivo local a Upstash Redis.
                 response_text = await call_ia(role, text, redis_client=redis)
                 
-                if len(response_text) > 4000:
-                    response_text = response_text[:4000] + "\n\n...(truncado)"
-                
+                # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+                # MOTIVO: Eliminar truncamiento local. send_telegram ahora maneja 
+                #         el Message Chunking automático para respuestas EDVC largas.
+                # REF: Fase 3 - Implementación de Message Chunking en utils.py
                 await send_telegram(response_text, chat_id)
                 return {"ok": True}
                 
