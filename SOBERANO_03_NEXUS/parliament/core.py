@@ -41,6 +41,21 @@ def sanitize_prompt(prompt: str) -> str:
 async def call_ia(role: str, message: str) -> str:
     contexto = leer_contexto_obligatorio()
     
+    # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MOTIVO: Integrar Norma EDVC v1.0 en el system prompt para garantizar trazabilidad.
+    # REF: SOBERANO_00_GOBIERNO/NORMAS.md
+    edvc_instruction = """
+
+🚨 INSTRUCCION CRITICA (NORMA EDVC v1.0):
+Si en tu respuesta debes generar o modificar codigo, DEBES aplicar estrictamente las 4 capas del estandar EDVC:
+1. CAPA 1: Cedula de Identidad (Encabezado con ARCHIVO, SISTEMA, PROPOSITO, FECHA, AUTOR, VALIDADOR, AUDITORIA).
+2. CAPA 2: Contexto de Seccion (Explicar el PORQUE arquitectonico antes de bloques logicos).
+3. CAPA 3: La Cicatriz Quirurgica (Etiqueta [MOD-YYYY-MM-DD] [AUTOR] [VALIDADOR] MOTIVO: REF: antes de cambios criticos).
+4. CAPA 4: Changelog Vivo (Registro cronologico inverso al final del archivo).
+PROHIBIDO: Comentar cada linea individual o dejar codigo comentado sin etiqueta [DEPRECATED].
+Si no cumples, tu respuesta sera rechazada por el Auditor de Riesgos.
+"""
+    
     system_prompts = {
         "gerente": f"Eres el Gerente General del Parlamento Nexus. Toma decisiones estratégicas finales.\nContexto histórico:\n{contexto}\nResponde de forma concisa y profesional.",
         "analista": f"Eres el Analista Técnico. Analiza datos y tendencias.\nContexto:\n{contexto}\nSé preciso y basado en datos.",
@@ -49,7 +64,7 @@ async def call_ia(role: str, message: str) -> str:
         "secretario": f"Eres el Secretario. Genera actas y documentos claros.\nContexto:\n{contexto}"
     }
     
-    system_prompt = system_prompts.get(role, system_prompts["gerente"])
+    system_prompt = system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction
     
     logger.info(f"🧠 Llamando a Mistral para rol: {role}")
     respuesta = await call_mistral("mistral-small-latest", system_prompt, message)
