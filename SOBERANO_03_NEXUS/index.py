@@ -1,13 +1,13 @@
-# ================================================
-# MAESTRO-NEXUS | INDEX.PY V3.1 (REDIS QUEUE)
-# ================================================
-# ID: api/index.py
-# COMMIT: index_v3.1_redis_queue
-# FECHA: 2026-07-07
-# AUTOR: Gerente (DeepSeek) + Arquitecto (Copilot)
-# ESTADO: ✅ COMPLETO - REDIS QUEUE PARA GITHUB ACTIONS
-# ================================================
-# DESCRIPCIÓN: Punto de entrada de la API FastAPI.
+# ==============================================================================
+# ARCHIVO: index.py
+# SISTEMA: MAESTRO-NEXUS
+# PROPOSITO: Punto de entrada FastAPI. Gestiona webhooks de Telegram, comandos 
+#            y enrutamiento al debate parlamentario.
+# ULTIMA MODIFICACION MAYOR: 2026-07-27
+# AUTOR: Gerente (Qwen) | VALIDADO POR: Director (JEISSON_01)
+# DOCUMENTO DE AUDITORIA: SOBERANO_01_MEMORIA/AUDITS/AUDIT-INDEX-2026-07-27.md
+# ==============================================================================
+# DESCRIPCION: Punto de entrada de la API FastAPI.
 # Maneja webhooks de Telegram, comandos y debate parlamentario.
 # 
 # FIX V3.1 (2026-07-07):
@@ -132,7 +132,13 @@ async def webhook_verification():
     return {"status": "ok"}
 
 # ================================================
-# SECCIÓN 6: WEBHOOK PRINCIPAL DE TELEGRAM
+# SECCION 6: WEBHOOK PRINCIPAL DE TELEGRAM
+# ================================================
+# [CONTEXTO ARQUITECTONICO]
+# MOTIVO: Vercel destruye los contenedores serverless inmediatamente despues 
+# de responder, matando las tareas en segundo plano (BackgroundTasks).
+# SOLUCION: Los mensajes se encolan en Redis y son procesados por un Worker 
+# externo (GitHub Actions) o sincronicamente si la confianza es alta.
 # ================================================
 # 2026-07-07 - V3.1: Usa Redis Queue en lugar de BackgroundTasks
 
@@ -166,14 +172,25 @@ async def telegram_webhook(req: Request):
     # COMANDO: /balance
     # ================================================
     if text == "/balance":
-        acc = get_alpaca_client().get_account()
-        modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
-        await send_telegram(
-            f"📊 *CUENTA ALPACA ({modo})*\n\n"
-            f"💵 *Equity:* ${float(acc.equity):,.2f}\n"
-            f"💸 *Buying Power:* ${float(acc.buying_power):,.2f}",
-            chat_id=chat_id
-        )
+        # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+        # MOTIVO: Proteger webhook de colapso 500 por credenciales de Alpaca invalidas.
+        # REF: Log de error 401-Alpaca-Unauthorized (2026-07-27)
+        try:
+            acc = get_alpaca_client().get_account()
+            modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
+            await send_telegram(
+                f"📊 *CUENTA ALPACA ({modo})*\n\n"
+                f"💵 *Equity:* ${float(acc.equity):,.2f}\n"
+                f"💸 *Buying Power:* ${float(acc.buying_power):,.2f}",
+                chat_id=chat_id
+            )
+        except Exception as e:
+            await send_telegram(
+                f"⚠️ *Error de conexion con Alpaca*\n\n"
+                f"Las claves de API en Vercel son invalidas o estan vacias.\n"
+                f"*(Detalle: {str(e)[:60]})*",
+                chat_id=chat_id
+            )
         return {"ok": True}
 
     # ================================================
@@ -336,9 +353,19 @@ async def telegram_webhook(req: Request):
     if text == "/health":
         try:
             from SOBERANO_02_CORE.core.scheduler import get_scheduler
+            # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+            # MOTIVO: Evitar que /health colapse si Alpaca tiene credenciales invalidas.
+            # REF: Log de error 401-Alpaca-Unauthorized (2026-07-27)
+            alpaca_status = "❌ Inactivo"
+            try:
+                get_alpaca_client().get_account()
+                alpaca_status = "✅ Activo"
+            except:
+                pass
+                
             servicios = {
                 "Redis": "✅ Activo" if redis.ping() else "❌ Inactivo",
-                "Alpaca": "✅ Activo" if get_alpaca_client() else "❌ Inactivo",
+                "Alpaca": alpaca_status,
                 "Scheduler": "✅ Activo" if get_scheduler() else "❌ Inactivo"
             }
             mensaje = "📊 *Estado de Servicios:*\n\n"
@@ -367,7 +394,11 @@ async def telegram_webhook(req: Request):
             
             intent = classify_intent(text)
             
-            if intent["confidence"] >= 1:
+            # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+            # MOTIVO: Umbral >= 1 inalcanzable. >= 0.95 fuerza procesamiento sincrono 
+            #         inmediato con el nuevo cerebro Mistral, sin depender del Worker.
+            # REF: Analisis forense de classifier.py (2026-07-27)
+            if intent["confidence"] >= 0.95:
                 # 2026-07-07 - V3.1: Guardar en Redis en lugar de BackgroundTasks
                 queue_key = f"queue:debate:{chat_id}:{datetime.now().timestamp()}"
                 redis.set(
@@ -604,3 +635,12 @@ async def diagnosticar_apis():
         resultados["apis"]["Railway"] = {"estado": "FALTANTE", "clave": "NO_CONFIGURADA"}
 
     return resultados
+
+# ==============================================================================
+# REGISTRO DE CAMBIOS (CHANGELOG VIVO)
+# ==============================================================================
+# [2026-07-27] Qwen: Aplicacion de Norma EDVC v1.0. Protegidos endpoints /balance 
+#                     y /health contra fallos de Alpaca. Ajustado umbral de clasificador 
+#                     para flujo sincrono. (Ref: NORMAS.md, AUDIT-INDEX-2026-07-27.md)
+# [2026-07-07] DeepSeek/Copilot: Migracion inicial a V3.1 (Redis Queue).
+# ==============================================================================
