@@ -13,7 +13,19 @@ PARLIAMENT_STACK = {
     "secretario": "Mistral (Generación de actas)"
 }
 
-def leer_contexto_obligatorio() -> str:
+def leer_contexto_obligatorio(redis_client=None) -> str:
+    # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MOTIVO: Migrar lectura de contexto a Redis para persistencia en Vercel, con fallback a local.
+    # REF: Limitación de filesystem efímero en Vercel Serverless.
+    if redis_client:
+        try:
+            registros = redis_client.lrange("memoria:bitacora:general", 0, 29)
+            if registros:
+                return "\n".join([r.decode('utf-8') for r in reversed(registros)])
+        except Exception as e:
+            logger.error(f"Error leyendo bitácora de Redis: {e}")
+    
+    # Fallback a archivo local (para ejecución local en Termux)
     bitacora_path = "SOBERANO_01_MEMORIA/bitacora.md"
     try:
         if not os.path.exists(bitacora_path):
@@ -22,24 +34,38 @@ def leer_contexto_obligatorio() -> str:
             lineas = f.readlines()
             return "".join(lineas[-30:]) if len(lineas) > 30 else "".join(lineas)
     except Exception as e:
-        logger.error(f"Error leyendo bitácora: {e}")
+        logger.error(f"Error leyendo bitácora local: {e}")
         return "Error al leer historial."
 
-def escribir_en_bitacora(accion: str, resultado: str):
-    bitacora_path = "SOBERANO_01_MEMORIA/bitacora.md"
-    try:
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        nuevo_registro = f"\n- **{fecha}** | **{accion}** | {resultado[:150]}...\n"
-        with open(bitacora_path, "a", encoding="utf-8") as f:
-            f.write(nuevo_registro)
-    except Exception as e:
-        logger.error(f"Error escribiendo en bitácora: {e}")
+def escribir_en_bitacora(redis_client, accion: str, resultado: str):
+    # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MOTIVO: Migrar escritura de bitácora a Redis para persistencia en Vercel.
+    # REF: Limitación de filesystem efímero en Vercel Serverless.
+    if redis_client:
+        try:
+            fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            registro = f"[{fecha}] {accion}: {resultado[:200]}"
+            redis_client.lpush("memoria:bitacora:general", registro)
+            redis_client.ltrim("memoria:bitacora:general", 0, 99)
+            redis_client.expire("memoria:bitacora:general", 86400 * 30)
+        except Exception as e:
+            logger.error(f"Error escribiendo en Redis: {e}")
+    else:
+        # Fallback a archivo local
+        bitacora_path = "SOBERANO_01_MEMORIA/bitacora.md"
+        try:
+            fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            nuevo_registro = f"\n- **{fecha}** | **{accion}** | {resultado[:150]}...\n"
+            with open(bitacora_path, "a", encoding="utf-8") as f:
+                f.write(nuevo_registro)
+        except Exception as e:
+            logger.error(f"Error escribiendo en bitácora local: {e}")
 
 def sanitize_prompt(prompt: str) -> str:
     return prompt.strip()
 
-async def call_ia(role: str, message: str) -> str:
-    contexto = leer_contexto_obligatorio()
+async def call_ia(role: str, message: str, redis_client=None) -> str:
+    contexto = leer_contexto_obligatorio(redis_client)
     
     # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
     # MOTIVO: Integrar Norma EDVC v1.0 en el system prompt para garantizar trazabilidad.
@@ -69,6 +95,6 @@ Si no cumples, tu respuesta sera rechazada por el Auditor de Riesgos.
     logger.info(f"🧠 Llamando a Mistral para rol: {role}")
     respuesta = await call_mistral("mistral-small-latest", system_prompt, message)
     
-    escribir_en_bitacora(f"CONSULTA_{role.upper()}", f"P: {message[:50]} | R: {respuesta[:50]}")
+    escribir_en_bitacora(redis_client, f"CONSULTA_{role.upper()}", f"P: {message[:50]} | R: {respuesta[:50]}")
     
     return respuesta

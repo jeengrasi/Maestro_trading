@@ -419,7 +419,11 @@ async def telegram_webhook(req: Request):
                 role = intent["role"]
                 dept_name = intent["department"].capitalize()
                 await send_telegram(f"🔍 *Consultando a {dept_name}...*", chat_id=chat_id)
-                response_text = await call_ia(role, text)
+                
+                # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+                # MOTIVO: Pasar el cliente Redis a call_ia para persistencia de la memoria en la nube.
+                # REF: Migración de bitácora de archivo local a Upstash Redis.
+                response_text = await call_ia(role, text, redis_client=redis)
                 
                 if len(response_text) > 4000:
                     response_text = response_text[:4000] + "\n\n...(truncado)"
@@ -639,9 +643,10 @@ async def diagnosticar_apis():
 # ==============================================================================
 # REGISTRO DE CAMBIOS (CHANGELOG VIVO)
 # ==============================================================================
+# [2026-07-27] Qwen: Migración de memoria de bitácora a Upstash Redis para 
+#                     garantizar persistencia de aciertos y errores en Vercel.
 # [2026-07-27] Qwen: Aplicacion de Norma EDVC v1.0. Protegidos endpoints /balance 
-#                     y /health contra fallos de Alpaca. Ajustado umbral de clasificador 
-#                     para flujo sincrono. (Ref: NORMAS.md, AUDIT-INDEX-2026-07-27.md)
+#                     y /health contra fallos de Alpaca. Ajustado umbral de clasificador.
 # [2026-07-07] DeepSeek/Copilot: Migracion inicial a V3.1 (Redis Queue).
 # ==============================================================================
 
