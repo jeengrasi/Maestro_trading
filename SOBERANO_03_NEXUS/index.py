@@ -34,12 +34,8 @@ from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 
 # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
-# MOTIVO: Integrar yfinance para analisis de mercado en tiempo real (Fase 6: Modo Sombra).
-try:
-    import yfinance as yf
-except ImportError:
-    yf = None
-    logging.warning("yfinance no esta instalado. El modo sombra requerira su instalacion en requirements.txt")
+# MOTIVO: Preparado para integraciones futuras. Nota: El Modo Sombra usa Alpaca Market Data 
+# nativo para evitar bloqueos de yfinance en entornos serverless (Vercel).
 
 # ================================================
 # SECCIÓN 2: CONFIGURACIÓN INICIAL
