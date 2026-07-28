@@ -271,10 +271,14 @@ async def telegram_webhook(req: Request):
     # COMANDO: /estado
     if text == "/estado":
         cb = redis.get("circuit_breaker:active")
-        cb_status = "🔴 ACTIVO" if (cb and cb.decode() == "true") else "🟢 INACTIVO"
+        cb_val = cb.decode() if isinstance(cb, bytes) else (cb or "")
+        cb_status = "🔴 ACTIVO" if cb_val == "true" else "🟢 INACTIVO"
+        
         auto_exec = "🟢 ACTIVADO" if Config.AUTO_EJECUCION else "🔴 DESACTIVADO"
+        
         wl_raw = redis.get("trading:watchlist")
-        wl = wl_raw.decode() if wl_raw else "AAPL,TSLA,NVDA,SPY,QQQ"
+        wl_val = wl_raw.decode() if isinstance(wl_raw, bytes) else (wl_raw or "")
+        wl = wl_val if wl_val else "AAPL,TSLA,NVDA,SPY,QQQ"
         
         msg = f"📊 *ESTADO DEL SISTEMA NEXUS*\n\n"
         msg += f"🛡️ Freno de Emergencia: {cb_status}\n"
@@ -287,7 +291,7 @@ async def telegram_webhook(req: Request):
     # COMANDO: /watchlist
     if text == "/watchlist":
         wl_raw = redis.get("trading:watchlist")
-        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
         lista = "\n".join([f"• {t}" for t in wl])
         await send_telegram(f"👁️ *ACTIVOS EN VIGILANCIA:*\n\n{lista}\n\n💡 Use `/watchlist agregar [TICKER]` o `/watchlist eliminar [TICKER]`", chat_id=chat_id)
         return {"ok": True}
@@ -296,7 +300,7 @@ async def telegram_webhook(req: Request):
     if text.startswith("/watchlist agregar "):
         nuevo_ticker = text.replace("/watchlist agregar ", "").strip().upper()
         wl_raw = redis.get("trading:watchlist")
-        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
         
         if nuevo_ticker in wl:
             await send_telegram(f"⚠️ *{nuevo_ticker}* ya está en la lista de vigilancia.", chat_id=chat_id)
@@ -310,7 +314,7 @@ async def telegram_webhook(req: Request):
     if text.startswith("/watchlist eliminar "):
         ticker_a_eliminar = text.replace("/watchlist eliminar ", "").strip().upper()
         wl_raw = redis.get("trading:watchlist")
-        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
         
         if ticker_a_eliminar in wl:
             wl.remove(ticker_a_eliminar)
