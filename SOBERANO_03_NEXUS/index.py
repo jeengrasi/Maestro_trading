@@ -198,29 +198,40 @@ async def telegram_webhook(req: Request):
     # ================================================
     if text == "/rendimiento":
         # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
-        # MOTIVO: Permitir al Director auditar el rendimiento historico de la cuenta Alpaca.
-        # REF: Fase 4 - Analisis de rendimiento y estrategia.
+        # MOTIVO: Obtener historial de operaciones usando httpx directo para evitar errores de importacion de alpaca-py en Vercel.
+        # REF: Fase 4 - Analisis de rendimiento y estrategia. Principio de Resiliencia.
         try:
-            from alpaca.trading.requests import GetAccountActivitiesRequest
-            from alpaca.trading.enums import ActivityType
+            api_key = os.getenv("ALPACA_API_KEY")
+            api_secret = os.getenv("ALPACA_SECRET_KEY")
+            is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
+            base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
             
-            req = GetAccountActivitiesRequest(
-                activity_types=[ActivityType.FILL],
-                page_size=10
-            )
-            activities = get_alpaca_client().get_account_activities(req)
+            headers = {
+                "APCA-API-KEY-ID": api_key,
+                "APCA-API-SECRET-KEY": api_secret
+            }
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # Solicitamos las ultimas 10 operaciones de tipo FILL (ejecuciones)
+                url = f"{base_url}/v2/account/activities?activity_types=FILL&page_size=10"
+                r = await client.get(url, headers=headers)
+                r.raise_for_status()
+                activities = r.json()
             
             if not activities:
-                await send_telegram("📊 *RENDIMIENTO*\n\nNo se encontraron operaciones recientes en el historial.", chat_id=chat_id)
+                await send_telegram("📊 *RENDIMIENTO*\n\nNo se encontraron operaciones recientes (FILL) en el historial.", chat_id=chat_id)
                 return {"ok": True}
             
             resumen = "📊 *RENDIMIENTO RECIENTE (Ultimas 10 Operaciones)*\n\n"
             for act in activities[:10]:
-                simbolo = act.symbol
-                lado = "COMPRA" if act.side == "buy" else "VENTA"
-                cantidad = act.qty
-                precio = float(act.price or 0)
-                fecha = act.transaction_time.strftime("%m-%d %H:%M") if act.transaction_time else "N/A"
+                simbolo = act.get("symbol", "N/A")
+                lado = "COMPRA" if act.get("side") == "buy" else "VENTA"
+                cantidad = act.get("qty", 0)
+                precio = float(act.get("price", 0))
+                # La fecha viene en formato ISO, la simplificamos
+                fecha_raw = act.get("transaction_time", act.get("date", "N/A"))
+                fecha = fecha_raw[:16].replace("T", " ") if isinstance(fecha_raw, str) else "N/A"
+                
                 resumen += f"• {fecha} | *{simbolo}* | {lado} {cantidad} @ ${precio:.2f}\n"
             
             resumen += "\n💡 *Nota:* El sistema esta registrando estas operaciones. Para un analisis de Win Rate y P&L acumulado, se activara el modulo de backtracking en la Fase 5."
@@ -230,7 +241,7 @@ async def telegram_webhook(req: Request):
         except Exception as e:
             await send_telegram(
                 f"⚠️ *Error al obtener historial de Alpaca*\n\n"
-                f"Verifique que las claves de API tengan permisos de lectura.\n"
+                f"Verifique que las claves de API sean validas y tengan permisos de lectura.\n"
                 f"*(Detalle: {str(e)[:60]})*",
                 chat_id=chat_id
             )
