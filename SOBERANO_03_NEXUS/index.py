@@ -194,6 +194,49 @@ async def telegram_webhook(req: Request):
         return {"ok": True}
 
     # ================================================
+    # COMANDO: /rendimiento
+    # ================================================
+    if text == "/rendimiento":
+        # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+        # MOTIVO: Permitir al Director auditar el rendimiento historico de la cuenta Alpaca.
+        # REF: Fase 4 - Analisis de rendimiento y estrategia.
+        try:
+            from alpaca.trading.requests import GetAccountActivitiesRequest
+            from alpaca.trading.enums import ActivityType
+            
+            req = GetAccountActivitiesRequest(
+                activity_types=[ActivityType.FILL],
+                page_size=10
+            )
+            activities = get_alpaca_client().get_account_activities(req)
+            
+            if not activities:
+                await send_telegram("📊 *RENDIMIENTO*\n\nNo se encontraron operaciones recientes en el historial.", chat_id=chat_id)
+                return {"ok": True}
+            
+            resumen = "📊 *RENDIMIENTO RECIENTE (Ultimas 10 Operaciones)*\n\n"
+            for act in activities[:10]:
+                simbolo = act.symbol
+                lado = "COMPRA" if act.side == "buy" else "VENTA"
+                cantidad = act.qty
+                precio = float(act.price or 0)
+                fecha = act.transaction_time.strftime("%m-%d %H:%M") if act.transaction_time else "N/A"
+                resumen += f"• {fecha} | *{simbolo}* | {lado} {cantidad} @ ${precio:.2f}\n"
+            
+            resumen += "\n💡 *Nota:* El sistema esta registrando estas operaciones. Para un analisis de Win Rate y P&L acumulado, se activara el modulo de backtracking en la Fase 5."
+            
+            await send_telegram(resumen, chat_id=chat_id)
+            
+        except Exception as e:
+            await send_telegram(
+                f"⚠️ *Error al obtener historial de Alpaca*\n\n"
+                f"Verifique que las claves de API tengan permisos de lectura.\n"
+                f"*(Detalle: {str(e)[:60]})*",
+                chat_id=chat_id
+            )
+        return {"ok": True}
+
+    # ================================================
     # COMANDO: /start
     # ================================================
     if text == "/start":
@@ -209,6 +252,7 @@ async def telegram_webhook(req: Request):
             f"/doc <nombre> - Consultar documento\n"
             f"/actas - Listar actas\n"
             f"/balance - Ver saldo\n"
+            f"/rendimiento - Ver ultimas operaciones\n"
             f"/chatid - Ver ID del chat\n"
             f"/start - Estado del bot\n"
             f"/stop - Pausar el sistema\n"
