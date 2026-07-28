@@ -35,6 +35,7 @@ from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 from SOBERANO_03_NEXUS.core.router import procesar_intencion
 from SOBERANO_03_NEXUS.core.diagnostics import router as diagnostics_router
 from SOBERANO_03_NEXUS.core.memory import bootstrap_nexus_memory
+from SOBERANO_03_NEXUS.core.commands import handle_telegram_command
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 
@@ -137,103 +138,12 @@ async def telegram_webhook(req: Request):
         return {"ok": False}
 
     # ================================================
-    # COMANDO: /chatid
+    # DELEGACIÓN DE COMANDOS BÁSICOS (FASE 9.1)
     # ================================================
-    if text == "/chatid":
-        await send_telegram(
-            f"Chat ID: `{chat_id}`\nEsperado: `{authorized_chat}`",
-            chat_id=chat_id
-        )
-        return {"ok": True}
-
-    # ================================================
-    # COMANDO: /balance
-    # ================================================
-    if text == "/balance":
-        # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
-        # MOTIVO: Proteger webhook de colapso 500 por credenciales de Alpaca invalidas.
-        # REF: Log de error 401-Alpaca-Unauthorized (2026-07-27)
-        try:
-            acc = get_alpaca_client().get_account()
-            modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
-            await send_telegram(
-                f"📊 *CUENTA ALPACA ({modo})*\n\n"
-                f"💵 *Equity:* ${float(acc.equity):,.2f}\n"
-                f"💸 *Buying Power:* ${float(acc.buying_power):,.2f}",
-                chat_id=chat_id
-            )
-        except Exception as e:
-            await send_telegram(
-                f"⚠️ *Error de conexion con Alpaca*\n\n"
-                f"Las claves de API en Vercel son invalidas o estan vacias.\n"
-                f"*(Detalle: {str(e)[:60]})*",
-                chat_id=chat_id
-            )
-        return {"ok": True}
-
-    # ================================================
-    # COMANDO: /rendimiento
-    # ================================================
-    if text == "/rendimiento":
-        # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
-        # MOTIVO: Obtener historial de operaciones usando httpx directo para evitar errores de importacion de alpaca-py en Vercel.
-        # REF: Fase 4 - Analisis de rendimiento y estrategia. Principio de Resiliencia.
-        try:
-            api_key = os.getenv("ALPACA_API_KEY")
-            api_secret = os.getenv("ALPACA_SECRET_KEY")
-            is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
-            base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
-            
-            headers = {
-                "APCA-API-KEY-ID": api_key,
-                "APCA-API-SECRET-KEY": api_secret
-            }
-            
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                # Solicitamos las ultimas 10 operaciones de tipo FILL (ejecuciones)
-                url = f"{base_url}/v2/account/activities?activity_types=FILL&page_size=10"
-                r = await client.get(url, headers=headers)
-                r.raise_for_status()
-                activities = r.json()
-            
-            if not activities:
-                await send_telegram("📊 *RENDIMIENTO*\n\nNo se encontraron operaciones recientes (FILL) en el historial.", chat_id=chat_id)
-                return {"ok": True}
-            
-            resumen = "📊 *RENDIMIENTO RECIENTE (Ultimas 10 Operaciones)*\n\n"
-            for act in activities[:10]:
-                simbolo = act.get("symbol", "N/A")
-                lado = "COMPRA" if act.get("side") == "buy" else "VENTA"
-                cantidad = act.get("qty", 0)
-                precio = float(act.get("price", 0))
-                # La fecha viene en formato ISO, la simplificamos
-                fecha_raw = act.get("transaction_time", act.get("date", "N/A"))
-                fecha = fecha_raw[:16].replace("T", " ") if isinstance(fecha_raw, str) else "N/A"
-                
-                resumen += f"• {fecha} | *{simbolo}* | {lado} {cantidad} @ ${precio:.2f}\n"
-            
-            resumen += "\n💡 *Nota:* El sistema esta registrando estas operaciones. Para un analisis de Win Rate y P&L acumulado, se activara el modulo de backtracking en la Fase 5."
-            
-            await send_telegram(resumen, chat_id=chat_id)
-            
-        except Exception as e:
-            await send_telegram(
-                f"⚠️ *Error al obtener historial de Alpaca*\n\n"
-                f"Verifique que las claves de API sean validas y tengan permisos de lectura.\n"
-                f"*(Detalle: {str(e)[:60]})*",
-                chat_id=chat_id
-            )
-        return {"ok": True}
-
-    # ================================================
-    # COMANDO: /sombra [TICKER] (MODO SOMBRA AUTONOMO)
-    # ================================================
-    if text.startswith("/sombra "):
-        # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
-        # MOTIVO: Modularización Fase 7. Delegación de lógica de trading al motor independiente.
-        # REF: Dictamen Mesa Tecnica AUDIT-MODULAR-FASE7-META-007
-        ticker = text.replace("/sombra ", "").strip()
-        await analizar_y_ejecutar_sombra(ticker, redis, send_telegram, chat_id)
+    # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MOTIVO: index.py actúa como conector delgado. Los comandos específicos 
+    #         se delegan a core/commands.py.
+    if await handle_telegram_command(text, chat_id, redis, send_telegram):
         return {"ok": True}
 
     # ================================================
