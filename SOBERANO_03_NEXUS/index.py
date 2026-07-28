@@ -265,6 +265,62 @@ async def telegram_webhook(req: Request):
         return {"ok": True}
 
     # ================================================
+    # COMANDOS: GESTIÓN DINÁMICA DEL SISTEMA (FASE 8.1)
+    # ================================================
+    
+    # COMANDO: /estado
+    if text == "/estado":
+        cb = redis.get("circuit_breaker:active")
+        cb_status = "🔴 ACTIVO" if (cb and cb.decode() == "true") else "🟢 INACTIVO"
+        auto_exec = "🟢 ACTIVADO" if Config.AUTO_EJECUCION else "🔴 DESACTIVADO"
+        wl_raw = redis.get("trading:watchlist")
+        wl = wl_raw.decode() if wl_raw else "AAPL,TSLA,NVDA,SPY,QQQ"
+        
+        msg = f"📊 *ESTADO DEL SISTEMA NEXUS*\n\n"
+        msg += f"🛡️ Freno de Emergencia: {cb_status}\n"
+        msg += f"⚙️ Ejecución Autónoma: {auto_exec}\n"
+        msg += f"👁️ Watchlist Actual: `{wl}`\n\n"
+        msg += f"💡 Use `/watchlist` para gestionar los activos."
+        await send_telegram(msg, chat_id=chat_id)
+        return {"ok": True}
+
+    # COMANDO: /watchlist
+    if text == "/watchlist":
+        wl_raw = redis.get("trading:watchlist")
+        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        lista = "\n".join([f"• {t}" for t in wl])
+        await send_telegram(f"👁️ *ACTIVOS EN VIGILANCIA:*\n\n{lista}\n\n💡 Use `/watchlist agregar [TICKER]` o `/watchlist eliminar [TICKER]`", chat_id=chat_id)
+        return {"ok": True}
+
+    # COMANDO: /watchlist agregar [TICKER]
+    if text.startswith("/watchlist agregar "):
+        nuevo_ticker = text.replace("/watchlist agregar ", "").strip().upper()
+        wl_raw = redis.get("trading:watchlist")
+        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        
+        if nuevo_ticker in wl:
+            await send_telegram(f"⚠️ *{nuevo_ticker}* ya está en la lista de vigilancia.", chat_id=chat_id)
+        else:
+            wl.append(nuevo_ticker)
+            redis.set("trading:watchlist", ",".join(wl))
+            await send_telegram(f"✅ *{nuevo_ticker}* agregado exitosamente a la vigilancia.", chat_id=chat_id)
+        return {"ok": True}
+
+    # COMANDO: /watchlist eliminar [TICKER]
+    if text.startswith("/watchlist eliminar "):
+        ticker_a_eliminar = text.replace("/watchlist eliminar ", "").strip().upper()
+        wl_raw = redis.get("trading:watchlist")
+        wl = wl_raw.decode().split(",") if wl_raw else ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
+        
+        if ticker_a_eliminar in wl:
+            wl.remove(ticker_a_eliminar)
+            redis.set("trading:watchlist", ",".join(wl))
+            await send_telegram(f"🗑️ *{ticker_a_eliminar}* eliminado de la vigilancia.", chat_id=chat_id)
+        else:
+            await send_telegram(f"⚠️ *{ticker_a_eliminar}* no se encuentra en la lista.", chat_id=chat_id)
+        return {"ok": True}
+
+    # ================================================
     # COMANDO: /start
     # ================================================
     if text == "/start":
