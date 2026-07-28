@@ -32,6 +32,7 @@ from alpaca.trading.enums import OrderSide, TimeInForce
 from upstash_redis import Redis
 from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.telegram.utils import send_telegram
+from SOBERANO_03_NEXUS.core.router import procesar_intencion
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 
@@ -265,91 +266,17 @@ async def telegram_webhook(req: Request):
         return {"ok": True}
 
     # ================================================
-    # COMANDOS: GESTIÓN DINÁMICA DEL SISTEMA (FASE 8.1)
+    # DELEGACIÓN AL ORQUESTADOR CENTRAL (FASE 8.3)
     # ================================================
+    # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MOTIVO: index.py actúa como conector delgado. Toda la lógica de enrutamiento
+    #         y lenguaje natural vive en core/router.py.
+    # REF: Principio de Separación de Responsabilidades.
     
-    # COMANDO: /estado
-    if text == "/estado":
-        cb = redis.get("circuit_breaker:active")
-        cb_val = cb.decode() if isinstance(cb, bytes) else (cb or "")
-        cb_status = "🔴 ACTIVO" if cb_val == "true" else "🟢 INACTIVO"
-        
-        auto_exec = "🟢 ACTIVADO" if Config.AUTO_EJECUCION else "🔴 DESACTIVADO"
-        
-        wl_raw = redis.get("trading:watchlist")
-        wl_val = wl_raw.decode() if isinstance(wl_raw, bytes) else (wl_raw or "")
-        wl = wl_val if wl_val else "AAPL,TSLA,NVDA,SPY,QQQ"
-        
-        msg = f"📊 *ESTADO DEL SISTEMA NEXUS*\n\n"
-        msg += f"🛡️ Freno de Emergencia: {cb_status}\n"
-        msg += f"⚙️ Ejecución Autónoma: {auto_exec}\n"
-        msg += f"👁️ Watchlist Actual: `{wl}`\n\n"
-        msg += f"💡 Use `/watchlist` para gestionar los activos."
-        await send_telegram(msg, chat_id=chat_id)
-        return {"ok": True}
-
-    # COMANDO: /watchlist
-    if text == "/watchlist":
-        wl_raw = redis.get("trading:watchlist")
-        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
-        lista = "\n".join([f"• {t}" for t in wl])
-        await send_telegram(f"👁️ *ACTIVOS EN VIGILANCIA:*\n\n{lista}\n\n💡 Use `/watchlist agregar [TICKER]` o `/watchlist eliminar [TICKER]`", chat_id=chat_id)
-        return {"ok": True}
-
-    # COMANDO: /watchlist agregar [TICKER]
-    if text.startswith("/watchlist agregar "):
-        nuevo_ticker = text.replace("/watchlist agregar ", "").strip().upper()
-        wl_raw = redis.get("trading:watchlist")
-        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
-        
-        if nuevo_ticker in wl:
-            await send_telegram(f"⚠️ *{nuevo_ticker}* ya está en la lista de vigilancia.", chat_id=chat_id)
-        else:
-            wl.append(nuevo_ticker)
-            redis.set("trading:watchlist", ",".join(wl))
-            await send_telegram(f"✅ *{nuevo_ticker}* agregado exitosamente a la vigilancia.", chat_id=chat_id)
-        return {"ok": True}
-
-    # COMANDO: /watchlist eliminar [TICKER]
-    if text.startswith("/watchlist eliminar "):
-        ticker_a_eliminar = text.replace("/watchlist eliminar ", "").strip().upper()
-        wl_raw = redis.get("trading:watchlist")
-        wl =  (wl_raw.decode().split(",") if isinstance(wl_raw, bytes) else wl_raw.split(",")) if wl_raw else  ["AAPL", "TSLA", "NVDA", "SPY", "QQQ"]
-        
-        if ticker_a_eliminar in wl:
-            wl.remove(ticker_a_eliminar)
-            redis.set("trading:watchlist", ",".join(wl))
-            await send_telegram(f"🗑️ *{ticker_a_eliminar}* eliminado de la vigilancia.", chat_id=chat_id)
-        else:
-            await send_telegram(f"⚠️ *{ticker_a_eliminar}* no se encuentra en la lista.", chat_id=chat_id)
-        return {"ok": True}
-
-    # ================================================
-    # COMANDO: /start
-    # ================================================
-    if text == "/start":
-        raw_max_vix = redis.get("risk:max_vix")
-        max_vix = raw_max_vix or Config.MAX_VIX
-        await send_telegram(
-            f"🤖 *Maestro AI Online*\n\n"
-            f"Configuración:\n"
-            f"• VIX Máximo: `{max_vix}`\n"
-            f"• Riesgo: `{Config.RISK_PER_TRADE * 100}%`\n\n"
-            f"📚 *Comandos:*\n"
-            f"/docs - Listar documentos\n"
-            f"/doc <nombre> - Consultar documento\n"
-            f"/actas - Listar actas\n"
-            f"/balance - Ver saldo\n"
-            f"/rendimiento - Ver ultimas operaciones\n"
-            f"/sombra [TICKER] - Analisis y ejecucion autonoma (Modo Sombra)\n"
-            f"/chatid - Ver ID del chat\n"
-            f"/start - Estado del bot\n"
-            f"/stop - Pausar el sistema\n"
-            f"/scheduler - Estado del scheduler\n"
-            f"/health - Estado de servicios\n"
-            f"/actualizar_bitacora - Actualizar Bitácora",
-            chat_id=chat_id
-        )
+    # Si el texto no fue capturado por los comandos básicos de arriba (/balance, /start, etc.),
+    # lo delegamos al orquestador central para su procesamiento inteligente.
+    if not text.startswith("/health") and not text.startswith("/scheduler") and not text.startswith("/actualizar_bitacora"):
+        await procesar_intencion(text, chat_id, redis, send_telegram)
         return {"ok": True}
 
     # ================================================
