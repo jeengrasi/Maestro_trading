@@ -33,6 +33,7 @@ from upstash_redis import Redis
 from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
+from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 
 # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
 # MOTIVO: Preparado para integraciones futuras. Nota: El Modo Sombra usa Alpaca Market Data 
@@ -573,6 +574,27 @@ async def procesar_debate_background(text: str, chat_id: int):
 # 4. ADD: Comentarios de deprecación
 # 5. ADD: Observaciones y fechas en todas las secciones modificadas
 # ================================================
+
+# ================================================
+# SECCIÓN 7.5: ENDPOINT DE TRIGGER PARA SCHEDULER AUTÓNOMO
+# ================================================
+# [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+# MOTIVO: Permitir que un servicio externo (GitHub Actions/Cron) dispare el análisis periódico.
+# REF: Fase 7.2 - Scheduler Autónomo.
+
+@app.get("/trigger-scheduler")
+async def trigger_scheduler():
+    try:
+        # Verificación básica de seguridad (opcional: agregar SCHEDULER_TOKEN en env vars)
+        # if os.getenv("SCHEDULER_TOKEN") != "tu_token_secreto":
+        #     return {"status": "unauthorized"}, 401
+        
+        chat_id = int(Config.TELEGRAM_CHAT_ID)
+        resultado = await ejecutar_analisis_periodico(redis, send_telegram, chat_id)
+        return {"status": "success", "detalle": resultado}
+    except Exception as e:
+        logger.error(f"Error en trigger-scheduler: {e}", exc_info=True)
+        return {"status": "error", "detalle": str(e)[:100]}
 
 # ================================================
 # SECCIÓN 8: DIAGNÓSTICO SEGURO DE APIs (SOLO LECTURA)
