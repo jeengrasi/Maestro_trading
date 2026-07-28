@@ -15,6 +15,7 @@ import httpx
 import logging
 from datetime import datetime
 from SOBERANO_03_NEXUS.config import Config
+from SOBERANO_03_NEXUS.trading import risk_manager
 
 logger = logging.getLogger(__name__)
 
