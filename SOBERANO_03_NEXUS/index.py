@@ -34,6 +34,7 @@ from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 from SOBERANO_03_NEXUS.core.router import procesar_intencion
 from SOBERANO_03_NEXUS.core.diagnostics import router as diagnostics_router
+from SOBERANO_03_NEXUS.core.memory import bootstrap_nexus_memory
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 
@@ -76,41 +77,7 @@ def get_alpaca_client():
         )
     return _alpaca_client
 
-# ================================================
-# SECCIÓN 4: MEMORIA DEL SISTEMA
-# ================================================
 
-def bootstrap_nexus_memory(redis_client: Redis):
-    try:
-        tg_id = redis_client.get("telegram:group_id")
-        feat_parliament = redis_client.get("feature:parliament")
-        
-        if not tg_id or not feat_parliament:
-            manifest_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                "NEXUS_MANIFEST.json"
-            )
-            if os.path.exists(manifest_path):
-                with open(manifest_path, "r") as f:
-                    manifest = json.load(f)
-                state = manifest.get("state_declarative", {})
-                
-                if not tg_id:
-                    redis_client.set("telegram:group_id", "6444278889")
-                if not feat_parliament:
-                    redis_client.set("feature:parliament", "0")
-                
-                redis_client.set(
-                    "risk:max_vix",
-                    str(state.get("risk_management", {}).get("max_vix", "20.0"))
-                )
-                redis_client.set(
-                    "nexus:state:last_recovery",
-                    datetime.now().isoformat()
-                )
-                logger.info("✅ Redis auto-hidratado exitosamente")
-    except Exception as e:
-        logger.error(f"❌ Error en bootstrap de memoria: {e}", exc_info=True)
 
 # ================================================
 # SECCIÓN 5: ENDPOINTS DE LA API
@@ -503,56 +470,6 @@ async def telegram_webhook(req: Request):
 
     return {"ok": True}
 
-# ================================================
-# SECCIÓN 7: FUNCIÓN DEPRECADA (V3.0)
-# ================================================
-# 2026-07-07 - DEPRECADA: Ya no se usa en V3.1
-# Se mantiene por compatibilidad
-
-async def procesar_debate_background(text: str, chat_id: int):
-    """
-    2026-07-07 - DEPRECADA: Reemplazada por Redis Queue + Worker
-    """
-    logger.warning("⚠️ procesar_debate_background está DEPRECADO. Usar Redis Queue.")
-    try:
-        from SOBERANO_03_NEXUS.router import (
-            handle_parliament_debate,
-            get_manager_recommendation
-        )
-        from SOBERANO_03_NEXUS.parliament.actas import generate_acta, save_acta_to_github
-        from datetime import datetime
-        
-        logger.info(f"📨 [DEPRECADO] Iniciando debate para chat {chat_id}")
-        
-        debate_results = await handle_parliament_debate(text)
-        recommendation = await get_manager_recommendation(text, debate_results)
-        
-        acta_content = await generate_acta(text, debate_results, recommendation)
-        acta_result = await save_acta_to_github(
-            acta_content,
-            f"NEXUS-DEB-{datetime.now().strftime('%Y%m%d-%H%M')}"
-        )
-        
-        response_text = "🏛️ *DEBATE PARLAMENTARIO FINALIZADO*\n\n"
-        for role, data in debate_results.items():
-            resp = data['response']
-            if len(resp) > 300:
-                resp = resp[:300] + "..."
-            response_text += f"*{data['role']} ({data['model']}):*\n{resp}\n\n"
-        response_text += f"---\n📋 *RECOMENDACIÓN FINAL:*\n{recommendation}"
-        response_text += f"\n\n📄 {acta_result}"
-        
-        await send_telegram(response_text, chat_id)
-        
-        logger.info(f"✅ [DEPRECADO] Debate completado para chat {chat_id}")
-        
-    except Exception as e:
-        logger.error(f"❌ Error en debate background (deprecado): {e}", exc_info=True)
-        await send_telegram(
-            f"❌ Error procesando el debate: {str(e)}\n\n"
-            "Por favor, intenta de nuevo más tarde.",
-            chat_id=chat_id
-        )
 
 # ================================================
 # FIN DEL ARCHIVO
