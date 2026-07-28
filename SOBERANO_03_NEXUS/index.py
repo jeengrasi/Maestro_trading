@@ -33,6 +33,14 @@ from upstash_redis import Redis
 from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 
+# [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+# MOTIVO: Integrar yfinance para analisis de mercado en tiempo real (Fase 6: Modo Sombra).
+try:
+    import yfinance as yf
+except ImportError:
+    yf = None
+    logging.warning("yfinance no esta instalado. El modo sombra requerira su instalacion en requirements.txt")
+
 # ================================================
 # SECCIÓN 2: CONFIGURACIÓN INICIAL
 # ================================================
@@ -248,6 +256,79 @@ async def telegram_webhook(req: Request):
         return {"ok": True}
 
     # ================================================
+    # COMANDO: /sombra [TICKER] (MODO SOMBRA AUTONOMO)
+    # ================================================
+    if text.startswith("/sombra "):
+        # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+        # MOTIVO: Implementar Modo Sombra con Freno de Emergencia para trading autonomo seguro.
+        # REF: Fase 6 - Autonomia y Autorregulacion.
+        ticker = text.replace("/sombra ", "").strip().upper()
+        await send_telegram(f"🔍 *Iniciando analisis autonomo para {ticker}...*", chat_id=chat_id)
+        
+        try:
+            # 1. Freno de Emergencia (Circuit Breaker)
+            cb_active = redis.get("circuit_breaker:active")
+            if cb_active and cb_active.decode() == "true":
+                await send_telegram("🔴 *FRENOS ACTIVADOS*: El sistema ha detectado rendimiento inferior al 40%. Trading autonomo suspendido hasta revision del Director.", chat_id=chat_id)
+                return {"ok": True}
+
+            # 2. Obtencion de datos de mercado
+            if yf is None:
+                await send_telegram("⚠️ *Error*: yfinance no esta disponible en el entorno. Agreguelo a requirements.txt.", chat_id=chat_id)
+                return {"ok": True}
+                
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="5d")
+            if hist.empty:
+                await send_telegram(f"⚠️ *Error*: No se encontraron datos para {ticker}.", chat_id=chat_id)
+                return {"ok": True}
+                
+            precio = float(hist['Close'].iloc[-1])
+            volumen = int(hist['Volume'].iloc[-1])
+            tendencia = "ALCISTA 📈" if hist['Close'].iloc[-1] > hist['Close'].iloc[-3] else "BAJISTA 📉"
+            
+            # 3. Debate del Parlamento (Analista + Auditor con concision)
+            from SOBERANO_03_NEXUS.parliament.core import call_ia
+            prompt_analista = f"Actua como Analista y Auditor. Activo: {ticker}. Precio: {precio}. Tendencia 5d: {tendencia}. Volumen: {volumen}. Regla de oro: Riesgo max 1%. Da un veredicto de COMPRA o VENTA con 1 razon principal. Max 60 palabras."
+            
+            decision_ia = await call_ia("estratega", prompt_analista, redis_client=redis)
+            
+            # 4. Logica de Ejecucion
+            es_compra = "COMPRA" in decision_ia.upper()
+            modo = "🧪 PAPER" if Config.ALPACA_PAPER else "💰 REAL"
+            mensaje_ejecucion = f"📊 *ANALISIS AUTONOMO: {ticker}*\n\n💵 Precio: ${precio:.2f}\n📈 Tendencia: {tendencia}\n🧠 Decision IA:\n_{decision_ia}_\n\n"
+            
+            if es_compra and Config.AUTO_EJECUCION:
+                # Ejecutar orden via httpx (metodo probado y resiliente)
+                api_key = os.getenv("ALPACA_API_KEY")
+                api_secret = os.getenv("ALPACA_SECRET_KEY")
+                is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
+                base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
+                
+                headers = {"APCA-API-KEY-ID": api_key, "APCA-API-SECRET-KEY": api_secret}
+                payload = {"symbol": ticker, "qty": 1, "side": "buy", "type": "market", "time_in_force": "day"}
+                
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    r = await client.post(f"{base_url}/v2/orders", headers=headers, json=payload)
+                    
+                if r.status_code == 200:
+                    mensaje_ejecucion += f"✅ *EJECUCION AUTONOMA ({modo})*: Orden de COMPRA de 1 accion enviada exitosamente."
+                    redis.lpush("memoria:trades:autonomos", f"[{datetime.now().strftime('%Y-%m-%d %H:%M')}] COMPRA {ticker} @ {precio}")
+                else:
+                    mensaje_ejecucion += f"❌ *FALLO DE EJECUCION*: {r.text[:100]}"
+            elif es_compra and not Config.AUTO_EJECUCION:
+                mensaje_ejecucion += f"⏸️ *SEÑAL DE COMPRA DETECTADA*, pero AUTO_EJECUCION esta desactivado en Config."
+            else:
+                mensaje_ejecucion += "⏸️ *SEÑAL DE ESPERA/VENTA*. No se ejecuta accion."
+                
+            await send_telegram(mensaje_ejecucion, chat_id=chat_id)
+            
+        except Exception as e:
+            await send_telegram(f"❌ *Error en modo sombra*: {str(e)[:100]}", chat_id=chat_id)
+            
+        return {"ok": True}
+
+    # ================================================
     # COMANDO: /start
     # ================================================
     if text == "/start":
@@ -264,6 +345,7 @@ async def telegram_webhook(req: Request):
             f"/actas - Listar actas\n"
             f"/balance - Ver saldo\n"
             f"/rendimiento - Ver ultimas operaciones\n"
+            f"/sombra [TICKER] - Analisis y ejecucion autonoma (Modo Sombra)\n"
             f"/chatid - Ver ID del chat\n"
             f"/start - Estado del bot\n"
             f"/stop - Pausar el sistema\n"
