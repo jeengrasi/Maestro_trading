@@ -85,60 +85,85 @@ async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_fu
         }
         
         if es_compra and Config.AUTO_EJECUCION:
+
         
-        if es_compra and Config.AUTO_EJECUCION:
+            # 1. VALIDACIÓN DE RIESGO OBLIGATORIA (Fase 9.2 - Nexus Contralor)
 
-       # 1. VALIDACIÓN DE RIESGO OBLIGATORIA (Fase 9.2)
+        
+            risk_check = await risk_manager.validate_trade(ticker, "buy", 1, redis_client)
 
-       risk_check = await risk_manager.validate_trade(ticker, "buy", 1, redis_client)
+        
+            if not risk_check["allowed"]:
 
-       if not risk_check["allowed"]:
+        
+                mensaje_ejecucion += f"⛔ *ORDEN BLOQUEADA POR RIESGO*: {risk_check['reason']}"
 
-           mensaje_ejecucion += f"⛔ *ORDEN BLOQUEADA POR RIESGO*: {risk_check['reason']}"
+        
+                resultado["status"] = "blocked_by_risk"
 
-           resultado["status"] = "blocked_by_risk"
+        
+            else:
 
-       else:
+        
+                # 2. EJECUCIÓN (Solo si el Risk Manager aprueba)
 
-           # 2. EJECUCIÓN (Solo si el Risk Manager aprueba)
+        
+                api_key_ord = os.getenv("ALPACA_API_KEY")
 
-           api_key_ord = os.getenv("ALPACA_API_KEY")
+        
+                api_secret_ord = os.getenv("ALPACA_SECRET_KEY")
 
-           api_secret_ord = os.getenv("ALPACA_SECRET_KEY")
+        
+                is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
 
-           is_paper = os.getenv("ALPACA_PAPER", "true").strip().lower() == "true"
+        
+                base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
 
-           base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
+        
+                
 
-           
+        
+                headers_ord = {"APCA-API-KEY-ID": api_key_ord, "APCA-API-SECRET-KEY": api_secret_ord}
 
-           headers_ord = {"APCA-API-KEY-ID": api_key_ord, "APCA-API-SECRET-KEY": api_secret_ord}
+        
+                payload = {"symbol": ticker, "qty": 1, "side": "buy", "type": "market", "time_in_force": "day"}
 
-           payload = {"symbol": ticker, "qty": 1, "side": "buy", "type": "market", "time_in_force": "day"}
+        
+                
 
-           
+        
+                async with httpx.AsyncClient(timeout=10.0) as client:
 
-           async with httpx.AsyncClient(timeout=10.0) as client:
+        
+                    r_ord = await client.post(f"{base_url}/v2/orders", headers=headers_ord, json=payload)
 
-               r_ord = await client.post(f"{base_url}/v2/orders", headers=headers_ord, json=payload)
+        
+                    
 
-               
+        
+                if r_ord.status_code == 200:
 
-           if r_ord.status_code == 200:
+        
+                    mensaje_ejecucion += f"✅ *EJECUCION AUTONOMA ({modo})*: Orden de COMPRA de 1 accion enviada exitosamente."
 
-               mensaje_ejecucion += f"✅ *EJECUCION AUTONOMA ({modo})*: Orden de COMPRA de 1 accion enviada exitosamente."
+        
+                    redis_client.lpush("memoria:trades:autonomos", f"[{datetime.now().strftime('%Y-%m-%d %H:%M')}] COMPRA {ticker} @ {precio}")
 
-               redis_client.lpush("memoria:trades:autonomos", f"[{datetime.now().strftime('%Y-%m-%d %H:%M')}] COMPRA {ticker} @ {precio}")
+        
+                    resultado["ejecutado"] = True
 
-               resultado["ejecutado"] = True
+        
+                    resultado["status"] = "executed"
 
-               resultado["status"] = "executed"
+        
+                else:
 
-           else:
+        
+                    mensaje_ejecucion += f"❌ *FALLO DE EJECUCION*: {r_ord.text[:100]}"
 
-               mensaje_ejecucion += f"❌ *FALLO DE EJECUCION*: {r_ord.text[:100]}"
+        
+                    resultado["status"] = "execution_failed"
 
-               resultado["status"] = "execution_failed"
 
         elif es_compra and not Config.AUTO_EJECUCION:
             mensaje_ejecucion += f"⏸️ *SEÑAL DE COMPRA DETECTADA*, pero AUTO_EJECUCION esta desactivado en Config."
