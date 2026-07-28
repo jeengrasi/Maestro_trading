@@ -1,0 +1,43 @@
+# ==============================================================================
+# ARCHIVO: scheduler.yml
+# SISTEMA: MAESTRO-NEXUS
+# PROPOSITO: Workflow de GitHub Actions para activar el Scheduler Autónomo
+#            de forma periódica (Cron Job) sin intervención humana.
+# ULTIMA MODIFICACION: 2026-07-28
+# AUTOR: Gerente (Qwen) | VALIDADO POR: Mesa Tecnica (Meta, Gemini)
+# ==============================================================================
+# [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: META, GEMINI, JEISSON_01]
+# MOTIVO: Implementar proactividad real 24/7 (Fase 7.2: Scheduler Autónomo).
+# REF: Hoja de Ruta Fase 6-7, Decision Gerencial
+
+name: Nexus Autonomous Scheduler
+
+on:
+  # Ejecutar cada hora en el minuto 0 (ej: 9:00, 10:00, 11:00...)
+  schedule:
+    - cron: '0 * * * *'
+  
+  # Permitir ejecución manual desde la pestaña "Actions" de GitHub para pruebas
+  workflow_dispatch:
+
+jobs:
+  trigger-scheduler:
+    name: Trigger Maestro-Nexus Scheduler
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Enviar solicitud al endpoint de Vercel
+        run: |
+          echo "🤖 [SCHEDULER] Despertando a Maestro-Nexus..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "https://maestro-trading.vercel.app/trigger-scheduler")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "Respuesta del servidor: $BODY"
+          echo "Código HTTP: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ [SCHEDULER] Activación exitosa."
+          else
+            echo "⚠️ [SCHEDULER] La activación devolvió un código inesperado. Revisar logs de Vercel."
+          fi
