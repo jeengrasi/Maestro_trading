@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.autonomy.reflexion_agent import generar_reflexion_y_propuesta
 # ==============================================================================
 # ARCHIVO: commands.py
 # MODULO: core
@@ -114,6 +115,22 @@ async def handle_telegram_command(text: str, chat_id: int, redis_client, send_te
             return True
         except Exception as e:
             await send_telegram_func(f"❌ Error: {str(e)}", chat_id)
+            return True
+
+
+    if text == "/reflexionar":
+        try:
+            await send_telegram_func("🔄 *Analizando patrones de bloqueo y generando reflexión...*\n\n_Esto puede tomar unos segundos._", chat_id=chat_id)
+            resultado = await generar_reflexion_y_propuesta(redis_client)
+            if resultado["status"] == "success":
+                await send_telegram_func(f"✅ *REFLEXIÓN COMPLETADA*\n\n{resultado['message']}\n\nEl Director debe revisar el Issue en GitHub para ratificar.", chat_id=chat_id)
+            elif resultado["status"] == "skipped":
+                await send_telegram_func(f"ℹ️ *SIN DATOS*\n\n{resultado['message']}\n\nEl sistema operó dentro de los parámetros normales.", chat_id=chat_id)
+            else:
+                await send_telegram_func(f"❌ *ERROR*\n\n{resultado['message']}", chat_id=chat_id)
+            return True
+        except Exception as e:
+            await send_telegram_func(f"❌ Error ejecutando reflexión: {str(e)[:100]}", chat_id=chat_id)
             return True
 
     # Si no es un comando básico, retornar False para que el router lo maneje
