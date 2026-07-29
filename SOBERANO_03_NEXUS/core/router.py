@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.core.contralor import get_contralor
 # ==============================================================================
 # ARCHIVO: router.py
 # MODULO: core
@@ -90,6 +91,15 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
     elif text_lower in ["/trigger-scheduler", "ejecuta el escaneo", "escanea el mercado ahora"]:
         from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
         await ejecutar_analisis_periodico(redis_client, send_telegram_func, chat_id)
+        return True
+
+
+    # COMANDO: /auditoria (Invocación directa al Nexus Contralor)
+    if text_lower in ["/auditoria", "auditoria del sistema", "reporte de integridad"]:
+        from SOBERANO_03_NEXUS.core.contralor import get_contralor
+        contralor = get_contralor(redis_client)
+        reporte = contralor.generar_reporte_integridad()
+        await send_telegram_func(reporte, chat_id=chat_id)
         return True
 
     # 7. PARLAMENTO: Debate general con IA (Fallback)
