@@ -58,22 +58,22 @@ async def ejecutar_analisis_periodico(redis_client, send_telegram_func, chat_id:
     oportunidades = []
     
     # 4. Analizar cada activo de la watchlist
-    # FASE 12.2: Obtener solo el activo de mayor prioridad en lugar de iterar toda la lista
-ticker = await obtener_activo_prioritario(redis_client)
-if not ticker:
-    logger.info("📭 No hay activos en la cola de prioridad para analizar.")
-    return {"status": "empty_queue"}
+        # FASE 12.2: Obtener solo el activo de mayor prioridad en lugar de iterar toda la lista
+    ticker = await obtener_activo_prioritario(redis_client)
+    if not ticker:
+        logger.info("📭 No hay activos en la cola de prioridad para analizar.")
+        return {"status": "empty_queue"}
 
-logger.info(f"🎯 Analizando activo prioritario: {ticker}")
-# Simulamos la obtención de datos para el score (en producción vendría de Alpaca)
-datos_mock = {'v': 1500000} 
-score = calcular_score_prioridad(ticker, datos_mock)
-# Si no se ejecuta, se devuelve a la cola con su score
-await actualizar_prioridad_en_redis(redis_client, ticker, score)
+    logger.info(f"🎯 Analizando activo prioritario: {ticker}")
+    # Simulamos la obtención de datos para el score (en producción vendría de Alpaca)
+    datos_mock = {'v': 1500000} 
+    score = calcular_score_prioridad(ticker, datos_mock)
+    # Si no se ejecuta, se devuelve a la cola con su score
+    await actualizar_prioridad_en_redis(redis_client, ticker, score)
 
-# Lista temporal para el análisis (contiene solo 1 activo prioritario)
-watchlist_prioritaria = [ticker]
-for ticker in watchlist_prioritaria:
+    # Lista temporal para el análisis (contiene solo 1 activo prioritario)
+    watchlist_prioritaria = [ticker]
+    for ticker in watchlist_prioritaria:
         ticker = ticker.strip().upper()
         try:
             resultado = await analizar_y_ejecutar_sombra(ticker, redis_client, send_telegram_func, chat_id)
