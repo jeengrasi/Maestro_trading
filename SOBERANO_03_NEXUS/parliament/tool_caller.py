@@ -60,18 +60,32 @@ async def execute_tool(tool_name: str, arguments: dict, redis_client=None) -> st
             base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
             
             headers = {"APCA-API-KEY-ID": api_key, "APCA-API-SECRET-KEY": api_secret}
-            # Obtenemos la última barra de 1 día para precio y volumen
-            url = f"{base_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
+            
+            # Intento 1: Barra de 1 día
+            url_day = f"{base_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
             async with httpx.AsyncClient(timeout=10.0) as client:
-                r = await client.get(url, headers=headers)
-            if r.status_code == 200:
-                data = r.json()
-                bars = data.get("bars", [])
+                r_day = await client.get(url_day, headers=headers)
+            
+            if r_day.status_code == 200:
+                bars = r_day.json().get("bars", [])
                 if bars:
                     bar = bars[0]
-                    return f"Datos de {ticker}: Precio Cierre=${bar.get('c')}, Volumen={bar.get('v')}. (Modo: {'Paper' if is_paper else 'Real'})"
-                return f"No se encontraron datos recientes para {ticker}."
-            return f"Error consultando Alpaca: HTTP {r.status_code} - {r.text[:100]}"
+                    return f"Datos de {ticker} (Diario): Precio=${bar.get('c')}, Volumen={bar.get('v')}. (Modo: {'Paper' if is_paper else 'Real'})"
+            
+            # Intento 2 (Fallback): Si no hay barra diaria (ej. mercado cerrado), buscar la última de 1 minuto
+            url_min = f"{base_url}/v2/stocks/{ticker}/bars?timeframe=1Min&limit=1&sort=desc"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r_min = await client.get(url_min, headers=headers)
+            
+            if r_min.status_code == 200:
+                bars_min = r_min.json().get("bars", [])
+                if bars_min:
+                    bar_min = bars_min[0]
+                    return f"Datos de {ticker} (Última cotización): Precio=${bar_min.get('c')}. (Mercado cerrado o sin datos diarios. Modo: {'Paper' if is_paper else 'Real'})"
+            
+            # Fallo total
+            return f"ADVERTENCIA CRÍTICA: No se encontraron datos de mercado para {ticker} en Alpaca (ni diarios ni recientes). No inventes precios. Informa al Director que el activo no tiene datos disponibles."
+
 
         elif tool_name == "get_github_file":
             filepath = arguments.get("filepath", "")
