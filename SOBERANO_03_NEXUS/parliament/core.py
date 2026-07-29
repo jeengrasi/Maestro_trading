@@ -1,3 +1,5 @@
+import json
+import httpx
 from SOBERANO_03_NEXUS.parliament.tool_caller import MISTRAL_TOOLS, execute_tool
 from SOBERANO_03_NEXUS.parliament.github_rag import obtener_contexto_gobierno
 import os
@@ -119,9 +121,55 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
     
     system_prompt = system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction
     
-    logger.info(f"🧠 Llamando a Mistral para rol: {role}")
-    respuesta = await call_mistral("mistral-small-latest", system_prompt, message)
+    logger.info(f"🧠 Llamando a Mistral para rol: {role} (Con Tool-Calling)")
     
+    # FASE 12.1: Bucle de Tool-Calling (Máximo 2 iteraciones para evitar bucles infinitos)
+    max_tool_calls = 2
+    messages_history = [
+        {"role": "system", "content": system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction},
+        {"role": "user", "content": message}
+    ]
+    
+    respuesta = ""
+    for _ in range(max_tool_calls):
+        api_key = os.getenv("MISTRAL_API_KEY")
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        payload = {
+            "model": "mistral-small-latest",
+            "messages": messages_history,
+            "tools": MISTRAL_TOOLS,
+            "tool_choice": "auto"
+        }
+        
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post("https://api.mistral.ai/v1/chat/completions", headers=headers, json=payload)
+            
+        if r.status_code == 200:
+            msg = r.json()["choices"][0]["message"]
+            if "tool_calls" in msg and msg["tool_calls"]:
+                tool_call = msg["tool_calls"][0]
+                func_name = tool_call["function"]["name"]
+                func_args = json.loads(tool_call["function"]["arguments"])
+                
+                logger.info(f"🛠️ Ejecutando herramienta: {func_name}")
+                tool_result = await execute_tool(func_name, func_args, redis_client)
+                
+                messages_history.append(msg)
+                messages_history.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "content": tool_result
+                })
+            else:
+                respuesta = msg.get("content", "Sin respuesta de la IA.")
+                break
+        else:
+            respuesta = f"Error en Mistral: {r.status_code} - {r.text[:100]}"
+            break
+            
+    if not respuesta:
+        respuesta = "Límite de herramientas alcanzado."
+
     escribir_en_bitacora(redis_client, f"CONSULTA_{role.upper()}", f"P: {message[:50]} | R: {respuesta[:50]}")
     
     return respuesta
