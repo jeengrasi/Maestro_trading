@@ -106,8 +106,15 @@ async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_fu
             else:
 
         
-                # 2. EJECUCIÓN (Solo si el Risk Manager aprueba)
+                # 2. VERIFICACIÓN DE AUTORIZACIÓN TEMPORAL (Fase 13)
+                if not get_auto_ejecucion_state(redis_client):
+                    mensaje_ejecucion += "⚠️ *MODO SOMBRA*: La ejecución automática está desactivada o expiró.\n\n"
+                    mensaje_ejecucion += "Use el comando /reflexionar o espere la próxima señal con botones de autorización.\n\n"
+                    resultado["status"] = "shadow_pending_auth"
+                    await send_telegram_func(mensaje_ejecucion, chat_id=chat_id)
+                    return resultado
 
+                # 3. EJECUCIÓN REAL (Solo si el Risk Manager aprueba Y hay autorización temporal)
         
                 api_key_ord = os.getenv("ALPACA_API_KEY")
 

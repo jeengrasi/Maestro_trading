@@ -38,6 +38,7 @@ from SOBERANO_03_NEXUS.core.memory import bootstrap_nexus_memory
 from SOBERANO_03_NEXUS.core.commands import handle_telegram_command
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
+from SOBERANO_03_NEXUS.telegram.inline_actions import handle_autorizacion_callback
 
 # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
 # MOTIVO: Preparado para integraciones futuras. Nota: El Modo Sombra usa Alpaca Market Data 
