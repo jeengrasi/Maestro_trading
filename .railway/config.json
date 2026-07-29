@@ -1,0 +1,19 @@
+{
+  "projects": {
+    "/data/data/com.termux/files/home": {
+      "projectPath": "/data/data/com.termux/files/home",
+      "name": "Nexus",
+      "project": "3e3821cf-bbcf-44a2-879e-42834218646b",
+      "environment": "f859ba50-1525-48bc-b975-b6345f22264a",
+      "environmentName": "production",
+      "service": "08212b5f-f7aa-49ac-ba15-58275cfdfedc"
+    }
+  },
+  "user": {
+    "token": null,
+    "accessToken": "MBvJ4eN9uAy3-gS6x5J-6quaBhSW0eMZdefqFHuOTIV",
+    "refreshToken": "07m9xH9Ng5WHubAoDdglDkD6MFlxUUPnRkSrpkUotYp",
+    "tokenExpiresAt": 1785130892
+  },
+  "linkedFunctions": null
+}
