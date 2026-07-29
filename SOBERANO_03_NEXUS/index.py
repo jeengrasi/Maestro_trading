@@ -125,6 +125,37 @@ async def webhook_verification():
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     payload = await req.json()
+    
+    # ==========================================
+    # FASE 13: Manejo de botones inline (callback_query)
+    # ==========================================
+    if "callback_query" in payload:
+        try:
+            callback = payload["callback_query"]
+            chat_id = callback["message"]["chat"]["id"]
+            query_data = callback["data"]
+            
+            # Procesar la autorización usando el módulo dedicado
+            respuesta = await handle_autorizacion_callback(query_data, redis)
+            
+            # Responder a Telegram para quitar el estado de "cargando" del botón
+            callback_response = {
+                "callback_query_id": callback["id"],
+                "text": respuesta["text"],
+                "show_alert": True,
+                "parse_mode": respuesta.get("parse_mode", "Markdown")
+            }
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.post(
+                    f"https://api.telegram.org/bot{Config.TELEGRAM_BOT_TOKEN}/answerCallbackQuery", 
+                    json=callback_response
+                )
+            return {"ok": True}
+        except Exception as e:
+            logger.error(f"Error procesando callback_query: {e}")
+            return {"ok": False}
+
+    # Procesamiento normal de mensajes de texto
     message = payload.get("message", {})
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
