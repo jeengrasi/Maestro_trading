@@ -55,7 +55,7 @@ async def diagnosticar_apis():
     await test_llm("Cerebras", "https://api.cerebras.ai/v1/chat/completions", os.getenv("CEREBRAS_API_KEY"), "llama3.1-8b")
     
     nim_key = os.getenv("NVIDIA_NIM_API_KEY") or os.getenv("NVIDIA_API_KEY")
-    await test_llm("NVIDIA NIM", "https://integrate.api.nvidia.com/v1/chat/completions", nim_key, "meta/llama3-8b-instruct")
+    await test_llm("NVIDIA NIM", "https://integrate.api.nvidia.com/v1/chat/completions", nim_key, "meta/llama-3.1-8b-instruct")
 
     gemini_key = os.getenv("GOOGLE_API_KEY")
     if gemini_key:
@@ -74,7 +74,7 @@ async def diagnosticar_apis():
     if cf_token and cf_account:
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/ai/run/@cf/meta/llama-3-8b-instruct"
+                url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/ai/run/@cf/meta/llama-3.1-8b-instruct"
                 r = await client.post(url, headers={"Authorization": f"Bearer {cf_token}"}, json={"messages": [{"role": "user", "content": "Hi"}]})
                 resultados["apis"]["Cloudflare AI"] = {"estado": "✅ OK" if r.status_code == 200 else f"❌ FALLÓ ({r.status_code})", "clave": mask_key(cf_token)}
         except Exception as e:

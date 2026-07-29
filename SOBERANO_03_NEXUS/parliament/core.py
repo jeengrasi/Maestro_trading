@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.parliament.github_rag import obtener_contexto_gobierno
 import os
 import logging
 from datetime import datetime
@@ -97,12 +98,22 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
 6. Formato: Markdown simple, sin tablas complejas que se rompan en Telegram.
 """
     
+    # [MOD-2026-07-29] Inyección de contexto de gobierno si la pregunta es normativa
+    contexto_normativo = ""
+    if any(palabra in message.lower() for palabra in ["norma", "regla", "constitucion", "riesgo", "art.", "gobierno"]):
+        try:
+            contexto_normativo = await obtener_contexto_gobierno()
+        except Exception as e:
+            logger.error(f"Error obteniendo contexto GitHub: {e}")
+    
+    contexto_final = f"{contexto}\n\n{contexto_normativo}" if contexto_normativo else contexto
+
     system_prompts = {
-        "gerente": f"Eres el Gerente General del Parlamento Nexus. Das veredictos ejecutivos finales.\nContexto:\n{contexto}\n{concision_rule}",
-        "analista": f"Eres el Analista Tecnico. Das datos duros y tendencias en formato ejecutivo.\nContexto:\n{contexto}\n{concision_rule}",
-        "auditor": f"Eres el Auditor de Riesgos (Art. 14: max 1% riesgo, VIX max 20). Vetar si se excede.\nContexto:\n{contexto}\n{concision_rule}",
-        "estratega": f"Eres el Estratega de Mercado. Das recomendaciones de inversion con datos.\nContexto:\n{contexto}\n{concision_rule}",
-        "secretario": f"Eres el Secretario. Generas actas ultra-brevias y claras.\nContexto:\n{contexto}\n{concision_rule}"
+        "gerente": f"Eres el Gerente General del Parlamento Nexus. Das veredictos ejecutivos finales.\nContexto:\n{contexto_final}\n{concision_rule}",
+        "analista": f"Eres el Analista Tecnico. Das datos duros y tendencias en formato ejecutivo.\nContexto:\n{contexto_final}\n{concision_rule}",
+        "auditor": f"Eres el Auditor de Riesgos (Art. 14: max 1% riesgo, VIX max 20). Vetar si se excede.\nContexto:\n{contexto_final}\n{concision_rule}",
+        "estratega": f"Eres el Estratega de Mercado. Das recomendaciones de inversion con datos.\nContexto:\n{contexto_final}\n{concision_rule}",
+        "secretario": f"Eres el Secretario. Generas actas ultra-brevias y claras.\nContexto:\n{contexto_final}\n{concision_rule}"
     }
     
     system_prompt = system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction
