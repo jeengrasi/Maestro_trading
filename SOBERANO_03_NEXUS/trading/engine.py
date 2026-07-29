@@ -16,6 +16,7 @@ import logging
 from datetime import datetime
 from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.trading import risk_manager
+from SOBERANO_03_NEXUS.config import get_auto_ejecucion_state
 
 logger = logging.getLogger(__name__)
 
