@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.parliament.tool_caller import MISTRAL_TOOLS, execute_tool
 from SOBERANO_03_NEXUS.parliament.github_rag import obtener_contexto_gobierno
 import os
 import logging

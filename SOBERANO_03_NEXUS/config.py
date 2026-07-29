@@ -11,3 +11,26 @@ class Config:
     AUTO_EJECUCION = os.getenv("AUTO_EJECUCION", "false").lower() == "true"
     UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
     UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
+
+
+# ==============================================================================
+# [MOD-2026-07-29] FASE 12.1: Soporte para AUTO_EJECUCION_TEMP en Redis
+# PROPÓSITO: Permitir activación temporal de ejecución autónoma (TTL 1h)
+# ==============================================================================
+def get_auto_ejecucion_state(redis_client=None) -> bool:
+    """
+    Verifica si la ejecución autónoma está permitida.
+    Prioridad 1: Clave temporal en Redis (AUTO_EJECUCION_TEMP con TTL).
+    Prioridad 2: Variable de entorno del sistema.
+    """
+    if redis_client:
+        try:
+            temp_state = redis_client.get("AUTO_EJECUCION_TEMP")
+            if temp_state:
+                val = temp_state.decode() if isinstance(temp_state, bytes) else str(temp_state)
+                if val.lower() == "true":
+                    return True
+        except Exception:
+            pass # Fallback a env var si falla Redis
+    
+    return os.getenv("AUTO_EJECUCION", "false").lower() == "true"
