@@ -1,0 +1,29 @@
+name: Auditoría Constitucional de Roles
+
+on:
+  push:
+    branches: [ soberano-v1, main, master ]
+  pull_request:
+    branches: [ soberano-v1, main, master ]
+
+jobs:
+  auditar-roles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Ejecutar Auditor de Roles
+        run: |
+          echo "🛡️ Iniciando verificación de cumplimiento constitucional..."
+          python3 SOBERANO_00_GOBIERNO/auditor_de_roles.py
+          
+      - name: Validar Sintaxis Python (Extra)
+        run: |
+          echo "📝 Validando sintaxis de todos los archivos Python..."
+          python3 -m compileall SOBERANO_03_NEXUS/ -q
