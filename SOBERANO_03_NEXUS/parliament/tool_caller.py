@@ -54,15 +54,15 @@ async def execute_tool(tool_name: str, arguments: dict, redis_client=None) -> st
     try:
         if tool_name == "get_alpaca_data":
             ticker = arguments.get("ticker", "").upper()
-            api_key = os.getenv("ALPACA_API_KEY")
-            api_secret = os.getenv("ALPACA_SECRET_KEY")
-            is_paper = os.getenv("ALPACA_PAPER", "true").lower() == "true"
-            base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
+            api_key = os.getenv("ALPACA_API_KEY", "").strip()
+            api_secret = os.getenv("ALPACA_SECRET_KEY", "").strip()
             
+            # CORRECCIÓN CRÍTICA: Los datos de mercado de Alpaca SIEMPRE usan data.alpaca.markets
+            data_url = "https://data.alpaca.markets"
             headers = {"APCA-API-KEY-ID": api_key, "APCA-API-SECRET-KEY": api_secret}
             
             # Intento 1: Barra de 1 día
-            url_day = f"{base_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
+            url_day = f"{data_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
             async with httpx.AsyncClient(timeout=10.0) as client:
                 r_day = await client.get(url_day, headers=headers)
             
