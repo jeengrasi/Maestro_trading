@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.autonomy.backtester import ejecutar_backtest
 from SOBERANO_03_NEXUS.autonomy.reflexion_agent import generar_reflexion_y_propuesta
 # ==============================================================================
 # ARCHIVO: commands.py
@@ -131,6 +132,34 @@ async def handle_telegram_command(text: str, chat_id: int, redis_client, send_te
             return True
         except Exception as e:
             await send_telegram_func(f"❌ Error ejecutando reflexión: {str(e)[:100]}", chat_id=chat_id)
+            return True
+
+
+    if text.startswith("/backtest "):
+        try:
+            ticker = text.split(" ")[1].strip().upper()
+            await send_telegram_func(f"🔄 *EJECUTANDO BACKTEST*\n\nSimulando estrategia en *{ticker}* (últimos 180 días). Esto puede tomar unos segundos...\n\n_El sistema aplicará el factor de seguridad 0.4 y riesgo del 1%._", chat_id=chat_id)
+            
+            resultado = await ejecutar_backtest(ticker, dias=180)
+            
+            if "error" in resultado:
+                await send_telegram_func(f"❌ *ERROR EN BACKTEST*\n\n{resultado['error']}", chat_id=chat_id)
+            else:
+                veredicto_emoji = "✅" if resultado["veredicto"] == "APTO" else "⚠️"
+                mensaje = (
+                    f"{veredicto_emoji} *REPORTE DE BACKTEST: {resultado['ticker']}*\n\n"
+                    f"📅 *Días simulados:* {resultado['dias_simulados']}\n"
+                    f"💰 *Capital:* ${resultado['capital_inicial']} ➡️ ${resultado['capital_final']}\n"
+                    f"📈 *Retorno Total:* {resultado['retorno_total_pct']}%\n"
+                    f"🎯 *Win Rate:* {resultado['win_rate_pct']}% ({resultado['trades_totales']} trades)\n"
+                    f"📉 *Max Drawdown:* {resultado['max_drawdown_pct']}%\n\n"
+                    f"🛡️ *Veredicto:* {resultado['veredicto']}\n\n"
+                    f"_Nota: Simulación con factor de seguridad 0.4 y SL 5%._"
+                )
+                await send_telegram_func(mensaje, chat_id=chat_id)
+            return True
+        except Exception as e:
+            await send_telegram_func(f"❌ *ERROR*\n\nUso correcto: `/backtest AAPL`\nDetalle: {str(e)[:50]}", chat_id=chat_id)
             return True
 
     # Si no es un comando básico, retornar False para que el router lo maneje
