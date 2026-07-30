@@ -68,7 +68,7 @@ def escribir_en_bitacora(redis_client, accion: str, resultado: str):
 def sanitize_prompt(prompt: str) -> str:
     return prompt.strip()
 
-async def call_ia(role: str, message: str, redis_client=None) -> str:
+async def call_ia(role: str, message: str, redis_client=None, chat_id: str = None) -> str:
     contexto = leer_contexto_obligatorio(redis_client)
     
     # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
@@ -125,8 +125,25 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
     
     # FASE 12.1: Bucle de Tool-Calling (Máximo 2 iteraciones para evitar bucles infinitos)
     max_tool_calls = 2
+    # --- INICIO: MEMORIA DESLIZANTE (CRECIMIENTO COGNITIVO) ---
+    history_context = ""
+    if chat_id and redis_client:
+        history_key = f"chat_history:{chat_id}"
+        history = redis_client.lrange(history_key, 0, 3) # Últimos 4 mensajes
+        history.reverse()
+        if history:
+            history_context = "\n[CONTEXTO DE CONVERSACIÓN RECIENTE]\n"
+            for h in history:
+                h_str = h.decode() if isinstance(h, bytes) else h
+                history_context += f"{h_str}\n"
+            history_context += "[FIN CONTEXTO]\n"
+        # Guardar el nuevo mensaje del usuario
+        redis_client.lpush(history_key, f"Usuario: {message}")
+        redis_client.expire(history_key, 3600) # TTL 1 hora
+    # --- FIN: MEMORIA DESLIZANTE ---
+
     messages_history = [
-        {"role": "system", "content": system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction},
+        {"role": "system", "content": system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction + history_context},
         {"role": "user", "content": message}
     ]
     

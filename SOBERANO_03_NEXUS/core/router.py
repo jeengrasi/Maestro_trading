@@ -15,6 +15,7 @@ from SOBERANO_03_NEXUS.core.contralor import get_contralor
 import re
 import logging
 from SOBERANO_03_NEXUS.config import Config
+from SOBERANO_03_NEXUS.core.memory_logger import registrar_en_bitacora
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,15 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
         elif any(p in text_lower for p in ["precio", "tendencia", "gráfico", "datos"]): rol = "analista"
         elif any(p in text_lower for p in ["comprar", "vender", "inversión", "oportunidad"]): rol = "estratega"
         
-        respuesta = await call_ia(rol, text, redis_client=redis_client)
+        respuesta = await call_ia(rol, text, redis_client=redis_client, chat_id=chat_id)
+        
+        # Registro soberano en bitácora (Art. 5)
+        registrar_en_bitacora(
+            chat_id=str(chat_id),
+            accion=f"Consulta rol: {rol}",
+            herramientas_usadas=["call_ia"],
+            resultado_resumen=f"P: {text[:80]}... | R: {respuesta[:80]}..."
+        )
+        
         await send_telegram_func(respuesta, chat_id=chat_id)
         return True
