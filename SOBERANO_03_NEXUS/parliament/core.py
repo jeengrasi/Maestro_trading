@@ -84,6 +84,8 @@ Si en tu respuesta debes generar o modificar codigo, DEBES aplicar estrictamente
 4. CAPA 4: Changelog Vivo (Registro cronologico inverso al final del archivo).
 PROHIBIDO: Comentar cada linea individual o dejar codigo comentado sin etiqueta [DEPRECATED].
 Si no cumples, tu respuesta sera rechazada por el Auditor de Riesgos.
+
+🚨 REGLA DE HERRAMIENTAS: Si una herramienta devuelve un mensaje que comienza con '[ERROR DE HERRAMIENTA]', tienes PROHIBIDO volver a llamarla. Debes informar inmediatamente al Director con el mensaje de error exacto.
 """
     
     # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
