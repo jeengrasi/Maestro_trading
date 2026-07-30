@@ -99,6 +99,8 @@ Si en tu respuesta debes generar o modificar codigo, DEBES aplicar estrictamente
 PROHIBIDO: Comentar cada linea individual o dejar codigo comentado sin etiqueta [DEPRECATED].
 Si no cumples, tu respuesta sera rechazada por el Auditor de Riesgos.
 
+🚨 REGLA DE EXPLICABILIDAD (XAI): Si el usuario pregunta 'por qué', 'razón' o 'motivo' de una decisión, TIENES PROHIBIDO inventar una respuesta. DEBES usar obligatoriamente tus herramientas (github_rag o lectura de archivos) para consultar SOBERANO_01_MEMORIA/bitacora.md o las normas antes de responder.
+
 🚨 REGLA DE HERRAMIENTAS: Si una herramienta devuelve un mensaje que comienza con '[ERROR DE HERRAMIENTA]', tienes PROHIBIDO volver a llamarla. Debes informar inmediatamente al Director con el mensaje de error exacto.
 """
     
@@ -135,7 +137,7 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
         "secretario": f"Eres el Secretario. Generas actas ultra-brevias y claras.\nContexto:\n{contexto_final}\n{concision_rule}"
     }
     
-    system_prompt = system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction
+    system_prompt = system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction + history_context
     
     logger.info(f"🧠 Llamando a Mistral para rol: {role} (Con Tool-Calling)")
     
@@ -159,7 +161,7 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
     # --- FIN: MEMORIA DESLIZANTE ---
 
     messages_history = [
-        {"role": "system", "content": system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction + history_context},
+        {"role": "system", "content": system_prompts.get(role, system_prompts["gerente"]) + edvc_instruction + history_context + history_context},
         {"role": "user", "content": message}
     ]
     
