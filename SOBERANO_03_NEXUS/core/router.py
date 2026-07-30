@@ -128,9 +128,9 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
             clean_output = "\n".join([line for line in result.stdout.split('\n') if line.strip()])
             
             if result.returncode == 0:
-                await send_telegram_func(f"🟢 *AUDITORÍA EXITOSA*\n\n`{clean_output}`", chat_id=chat_id, parse_mode="Markdown")
+                await send_telegram_func(f"🟢 *AUDITORÍA EXITOSA*\n\n`{clean_output}`", chat_id=chat_id)
             else:
-                await send_telegram_func(f"🔴 *AUDITORÍA FALLIDA*\n\n`{clean_output}`", chat_id=chat_id, parse_mode="Markdown")
+                await send_telegram_func(f"🔴 *AUDITORÍA FALLIDA*\n\n`{clean_output}`", chat_id=chat_id)
         except Exception as e:
             await send_telegram_func(f"❌ *ERROR AL EJECUTAR AUDITOR*:\n{str(e)[:100]}", chat_id=chat_id)
         return True
