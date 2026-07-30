@@ -119,7 +119,8 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
             chat_id=str(chat_id),
             accion=f"Consulta rol: {rol}",
             herramientas_usadas=["call_ia"],
-            resultado_resumen=f"P: {text[:80]}... | R: {respuesta[:80]}..."
+            resultado_resumen=f"P: {text[:80]}... | R: {respuesta[:80]}...",
+            redis_client=redis_client
         )
         
         await send_telegram_func(respuesta, chat_id=chat_id)

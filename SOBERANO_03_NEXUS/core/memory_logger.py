@@ -2,29 +2,34 @@
 # ARCHIVO: memory_logger.py
 # MODULO: core
 # SISTEMA: MAESTRO-NEXUS
-# PROPOSITO: Registrar decisiones y uso de herramientas en la Bitácora Soberana.
-#            Cumple el Art. 5: "La memoria es el sistema, no la memoria de la IA".
+# PROPOSITO: Registrar decisiones en la Bitácora Soberana.
+#            Compatible con Vercel (Read-Only File System) usando fallback a Redis.
 # ==============================================================================
 import os
 import datetime
+import logging
 
-def registrar_en_bitacora(chat_id: str, accion: str, herramientas_usadas: list, resultado_resumen: str):
+logger = logging.getLogger(__name__)
+
+def registrar_en_bitacora(chat_id: str, accion: str, herramientas_usadas: list, resultado_resumen: str, redis_client=None):
     """
     Escribe una entrada estructurada en la bitácora del sistema.
+    Si el entorno es de solo lectura (ej. Vercel), hace fallback seguro a Redis.
     """
     bitacora_path = "SOBERANO_01_MEMORIA/bitacora.md"
     
-    os.makedirs("SOBERANO_01_MEMORIA", exist_ok=True)
-    
-    if not os.path.exists(bitacora_path):
-        with open(bitacora_path, "w", encoding="utf-8") as f:
-            f.write("# 📝 BITÁCORA SOBERANA DEL SISTEMA MAESTRO-NEXUS\n\n")
-            f.write("*La memoria es el sistema, no la memoria de la IA. (Art. 5)*\n\n---\n\n")
-    
-    fecha = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    herramientas_str = ", ".join(herramientas_usadas) if herramientas_usadas else "Ninguna"
-    
-    entrada = f"""
+    try:
+        os.makedirs("SOBERANO_01_MEMORIA", exist_ok=True)
+        
+        if not os.path.exists(bitacora_path):
+            with open(bitacora_path, "w", encoding="utf-8") as f:
+                f.write("# 📝 BITÁCORA SOBERANA DEL SISTEMA MAESTRO-NEXUS\n\n")
+                f.write("*La memoria es el sistema, no la memoria de la IA. (Art. 5)*\n\n---\n\n")
+        
+        fecha = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        herramientas_str = ", ".join(herramientas_usadas) if herramientas_usadas else "Ninguna"
+        
+        entrada = f"""
 ---
 id: LOG-{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}
 fecha: {fecha}
@@ -37,6 +42,17 @@ herramientas: [{herramientas_str}]
 
 ---
 """
-    
-    with open(bitacora_path, "a", encoding="utf-8") as f:
-        f.write(entrada)
+        with open(bitacora_path, "a", encoding="utf-8") as f:
+            f.write(entrada)
+            
+    except (OSError, PermissionError) as e:
+        # Fallback para entornos serverless de solo lectura (Vercel)
+        logger.warning(f"Entorno de solo lectura detectado. Fallback a Redis: {e}")
+        if redis_client:
+            try:
+                redis_key = f"bitacora_fallback:{chat_id}"
+                entry = f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {accion} | {resultado_resumen[:100]}"
+                redis_client.lpush(redis_key, entry)
+                redis_client.expire(redis_key, 86400) # 24 horas
+            except Exception as redis_e:
+                logger.error(f"Fallo en fallback de Redis: {redis_e}")
