@@ -1,3 +1,16 @@
+# ==============================================================================
+# ARCHIVO: commands.py
+# DEPARTAMENTO: 03 - NEXUS (Núcleo)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Procesador de Comandos
+# MISIÓN: Manejar comandos explícitos de Telegram (/help, /estado, etc.).
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 from SOBERANO_03_NEXUS.autonomy.backtester import ejecutar_backtest
 from SOBERANO_03_NEXUS.autonomy.reflexion_agent import generar_reflexion_y_propuesta
 # ==============================================================================

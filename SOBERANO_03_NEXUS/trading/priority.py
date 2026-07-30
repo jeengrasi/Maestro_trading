@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: priority.py
+# DEPARTAMENTO: 03 - NEXUS (Trading)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Gestor de Prioridades
+# MISIÓN: Determinar el orden de ejecución de tareas de trading concurrentes.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: priority.py
 # MODULO: trading
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Calcular y gestionar la prioridad de activos en la watchlist 

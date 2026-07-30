@@ -1,3 +1,16 @@
+# ==============================================================================
+# ARCHIVO: scheduler.py
+# DEPARTAMENTO: 03 - NEXUS (Autonomía)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Programador de Tareas
+# MISIÓN: Ejecutar tareas autónomas periódicas (ej: análisis de mercado).
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 from SOBERANO_03_NEXUS.trading.priority import obtener_activo_prioritario, actualizar_prioridad_en_redis, calcular_score_prioridad
 # ==============================================================================
 # ARCHIVO: scheduler.py

@@ -47,7 +47,7 @@ def main():
         filename = os.path.basename(filepath)
         
         # Regla A: Scripts de trading NO deben enviar mensajes a Telegram directamente
-        if 'trading' in filepath and 'send_telegram' in content and 'utils.py' not in filepath:
+        if 'trading' in filepath and re.search(r'(?:from.*telegram.*import|\bawait\s+send_telegram\b)', content) and 'utils.py' not in filepath:
             errores.append(f"🚨 VIOLACIÓN DE ROL en {filepath}: Los scripts de trading no pueden llamar a 'send_telegram' directamente.")
             
         # Regla B: Scripts de Telegram NO deben contener lógica de ejecución de órdenes

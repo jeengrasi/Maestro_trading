@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: memory.py
+# DEPARTAMENTO: 03 - NEXUS (Núcleo)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Gestor de Memoria
+# MISIÓN: Manejar la persistencia y recuperación de datos de corto plazo en Redis.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: memory.py
 # MODULO: core
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Gestión de memoria, inicialización de estado y persistencia de contexto.

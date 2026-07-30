@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+# ==============================================================================
+# ARCHIVO: nexus_bridge.py
+# DEPARTAMENTO: 03 - NEXUS (Raíz)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Puente de Comunicación
+# MISIÓN: Facilitar la comunicación entre módulos desacoplados del sistema.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 """
 Módulo Bridge de Exploración y Conexión Dinámica - Parlamento Nexus
 Detecta dinámicamente qué APIs y servicios están disponibles en el entorno local (Art. 12).

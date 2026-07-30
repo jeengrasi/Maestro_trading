@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: diagnostics.py
+# DEPARTAMENTO: 03 - NEXUS (Núcleo)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Diagnóstico de Salud
+# MISIÓN: Proveer endpoints y funciones para verificar el estado del sistema.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: diagnostics.py
 # MODULO: core
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Endpoint de diagnóstico seguro de APIs y conectividad (Solo Lectura).

@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: index.py
+# DEPARTAMENTO: 03 - NEXUS (Raíz)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Punto de Entrada Principal
+# MISIÓN: Recibir webhooks de Telegram y orquestar la petición inicial.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: index.py
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Punto de entrada FastAPI. Gestiona webhooks de Telegram, comandos 
 #            y enrutamiento al debate parlamentario.

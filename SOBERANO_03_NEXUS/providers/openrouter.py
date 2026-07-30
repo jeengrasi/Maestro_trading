@@ -1,3 +1,16 @@
+# ==============================================================================
+# ARCHIVO: openrouter.py
+# DEPARTAMENTO: 03 - NEXUS (Proveedores de IA)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Adaptador OpenRouter
+# MISIÓN: Interfaz de comunicación con la API de OpenRouter.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 import os, httpx, logging, asyncio, time
 logger = logging.getLogger(__name__)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

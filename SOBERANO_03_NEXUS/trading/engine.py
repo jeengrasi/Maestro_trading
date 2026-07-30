@@ -36,7 +36,7 @@ from SOBERANO_03_NEXUS.trading.position_sizer import calcular_tamano_posicion
 
 logger = logging.getLogger(__name__)
 
-async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_func, chat_id: int) -> dict:
+async def analizar_y_ejecutar_sombra(ticker: str, redis_client, notify_callback, chat_id: int) -> dict:
     """
     Analiza un activo usando datos nativos de Alpaca, evalúa la estrategia (Fase 14),
     calcula el riesgo (Fase 14), verifica autorización (Fase 13) y ejecuta si corresponde.
@@ -45,7 +45,7 @@ async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_fu
         # 1. Verificar Circuit Breaker
         win_rate = redis_client.get("metricas:win_rate")
         if win_rate and float(win_rate) < 0.40:
-            await send_telegram_func("🔴 *FRENOS ACTIVADOS*: Rendimiento inferior al 40%. Trading suspendido.", chat_id=chat_id)
+            await notify_callback("🔴 *FRENOS ACTIVADOS*: Rendimiento inferior al 40%. Trading suspendido.", chat_id=chat_id)
             return {"status": "blocked", "reason": "circuit_breaker"}
 
         # 2. Obtención de datos de mercado via Alpaca
@@ -58,7 +58,7 @@ async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_fu
             r_datos = await client.get(url_datos, headers=headers_data)
             
         if r_datos.status_code != 200 or not r_datos.json().get("bars"):
-            await send_telegram_func(f"⚠️ *Error*: No se encontraron datos para {ticker}.", chat_id=chat_id)
+            await notify_callback(f"⚠️ *Error*: No se encontraron datos para {ticker}.", chat_id=chat_id)
             return {"status": "error", "reason": "no_data"}
             
         bars = r_datos.json()["bars"]
@@ -142,10 +142,10 @@ async def analizar_y_ejecutar_sombra(ticker: str, redis_client, send_telegram_fu
                 ]
             ]
         }
-        await send_telegram_func(mensaje, chat_id=chat_id, reply_markup=inline_keyboard)
+        await notify_callback(mensaje, chat_id=chat_id, reply_markup=inline_keyboard)
         
         return resultado
         
     except Exception as e:
-        await send_telegram_func(f"❌ *ERROR CRÍTICO* en análisis de {ticker}: {str(e)[:100]}", chat_id=chat_id)
+        await notify_callback(f"❌ *ERROR CRÍTICO* en análisis de {ticker}: {str(e)[:100]}", chat_id=chat_id)
         return {"status": "error", "reason": str(e)[:100]}

@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: inline_actions.py
+# DEPARTAMENTO: 03 - NEXUS (Telecomunicaciones)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Manejador de Inline
+# MISIÓN: Procesar las respuestas a botones interactivos de Telegram.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: inline_actions.py
 # MODULO: telegram
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Manejar callbacks de botones inline de Telegram para autorización

@@ -1,3 +1,16 @@
+# ==============================================================================
+# ARCHIVO: router.py
+# DEPARTAMENTO: 03 - NEXUS (Raíz)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Enrutador de Peticiones
+# MISIÓN: Clasificar intenciones y dirigir el flujo al módulo correspondiente.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 # === MAESTRO-NEXUS FICHA v3.1 ===
 # ID: api/router.py | ESTADO: MODULARIZADO + CLASIFICADOR
 # FECHA: 2026-06-30 | GERENTE: DeepSeek

@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: memory_updater.py
+# DEPARTAMENTO: 03 - NEXUS (Núcleo)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Actualizador de Bitácora
+# MISIÓN: Sincronizar estados locales con la bitácora soberana en GitHub.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: memory_updater.py
 # MODULO: core
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Automatizar la actualización de ROADMAP.md y bitacora.md 

@@ -1,5 +1,18 @@
 # ==============================================================================
 # ARCHIVO: reflexion_agent.py
+# DEPARTAMENTO: 03 - NEXUS (Autonomía)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Agente de Reflexión
+# MISIÓN: Analizar resultados pasados y sugerir mejoras en la estrategia.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: reflexion_agent.py
 # MODULO: autonomy
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Analizar bloqueos del Risk Manager, generar reflexión post-mortem 
