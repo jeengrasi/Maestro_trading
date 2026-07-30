@@ -73,7 +73,7 @@ async def execute_tool(tool_name: str, arguments: dict, redis_client=None) -> st
                     return f"Datos de {ticker} (Diario): Precio=${bar.get('c')}, Volumen={bar.get('v')}. (Modo: {'Paper' if is_paper else 'Real'})"
             
             # Intento 2 (Fallback): Si no hay barra diaria (ej. mercado cerrado), buscar la última de 1 minuto
-            url_min = f"{base_url}/v2/stocks/{ticker}/bars?timeframe=1Min&limit=1&sort=desc"
+            url_min = f"{data_url}/v2/stocks/{ticker}/bars?timeframe=1Min&limit=1&sort=desc"
             async with httpx.AsyncClient(timeout=10.0) as client:
                 r_min = await client.get(url_min, headers=headers)
             
