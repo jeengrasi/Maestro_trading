@@ -116,6 +116,25 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
         await send_telegram_func(reporte, chat_id=chat_id)
         return True
 
+    if text_lower in ["/auditar_roles", "auditoria de roles", "estado constitucional"]:
+        import subprocess
+        await send_telegram_func("🛡️ *EJECUTANDO AUDITORÍA CONSTITUCIONAL...*\n\n_Esto puede tomar unos segundos._", chat_id=chat_id)
+        try:
+            result = subprocess.run(
+                ['python3', 'SOBERANO_00_GOBIERNO/auditor_de_roles.py'], 
+                capture_output=True, text=True, cwd='.'
+            )
+            # Limpiar el output para Telegram (quitar líneas vacías excesivas)
+            clean_output = "\n".join([line for line in result.stdout.split('\n') if line.strip()])
+            
+            if result.returncode == 0:
+                await send_telegram_func(f"🟢 *AUDITORÍA EXITOSA*\n\n`{clean_output}`", chat_id=chat_id, parse_mode="Markdown")
+            else:
+                await send_telegram_func(f"🔴 *AUDITORÍA FALLIDA*\n\n`{clean_output}`", chat_id=chat_id, parse_mode="Markdown")
+        except Exception as e:
+            await send_telegram_func(f"❌ *ERROR AL EJECUTAR AUDITOR*:\n{str(e)[:100]}", chat_id=chat_id)
+        return True
+
     # 7. PARLAMENTO: Debate general con IA (Fallback)
     else:
         from SOBERANO_03_NEXUS.parliament.core import call_ia
