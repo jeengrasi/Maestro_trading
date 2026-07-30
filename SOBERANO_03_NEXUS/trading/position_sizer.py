@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: position_sizer.py
 # MODULO: trading
+# DEPARTAMENTO: 03 - NEXUS (Trading)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: La Calculadora de Riesgo
+# MISIÓN: Calcular el tamaño exacto de posición para que el riesgo nunca exceda 1% con factor 0.4 de seguridad.
+# DEBERES: Aplicar fórmula de riesgo, rechazar operaciones si el capital es insuficiente.
+# PROHIBICIONES: Ejecutar órdenes, modificar estrategias.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: position_sizer.py
+# MODULO: trading
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Calcular el tamaño exacto de la posición para garantizar que el 
 #            riesgo nunca exceda el 1% del capital (Art. 14), con factor de seguridad 0.4.

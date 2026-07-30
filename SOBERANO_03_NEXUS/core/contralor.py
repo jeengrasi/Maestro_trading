@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: contralor.py
 # MODULO: core
+# DEPARTAMENTO: 00 - GOBIERNO
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Veedor Supremo
+# MISIÓN: Auditar la integridad de los archivos de gobierno y bloquear ejecuciones no autorizadas.
+# DEBERES: Calcular hashes SHA-256, comparar hashes, bloquear AUTO_EJECUCION_TEMP, generar reportes EDVC.
+# PROHIBICIONES: Ejecutar trading, enviar mensajes a Telegram, modificar archivos de gobierno.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: contralor.py
+# MODULO: core
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Veedor, Auditor y Garantizador de la integridad y alineación normativa del sistema.
 # ULTIMA MODIFICACION: 2026-07-28

@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: risk_manager.py
 # MODULO: trading
+# DEPARTAMENTO: 03 - NEXUS (Trading)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Firewall Matemático (Art. 14)
+# MISIÓN: Bloquear operaciones si las condiciones de mercado son adversas (VIX > 20).
+# DEBERES: Consultar volatilidad de SPY como proxy del VIX, devolver False si el riesgo excede el límite, aplicar Fail-Closed.
+# PROHIBICIONES: Ejecutar órdenes de trading, enviar mensajes a Telegram.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: risk_manager.py
+# MODULO: trading
 # SISTEMA: MAESTRO-NEXUS
 # ROL: Firewall Matemático de Riesgo (Art. 14)
 # MISIÓN: Bloquear operaciones si las condiciones de mercado son adversas.

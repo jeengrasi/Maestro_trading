@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: backtester.py
 # MODULO: autonomy
+# DEPARTAMENTO: 03 - NEXUS (Autonomía)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Historiador de Mercado
+# MISIÓN: Simular operaciones históricas para validar estrategias antes de operar en vivo.
+# DEBERES: Usar 100% API nativa de Alpaca, calcular Win Rate/Drawdown/Retorno, devolver veredicto APTO/REQUIERE AJUSTE.
+# PROHIBICIONES: Ejecutar órdenes en tiempo real, modificar estrategias.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: backtester.py
+# MODULO: autonomy
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Simular operaciones históricas para validar la rentabilidad y 
 #            el control de riesgo de la estrategia antes de operar en vivo.

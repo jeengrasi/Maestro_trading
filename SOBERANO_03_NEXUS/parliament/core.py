@@ -1,3 +1,17 @@
+# ==============================================================================
+# ARCHIVO: core.py
+# MODULO: parliament
+# DEPARTAMENTO: 03 - NEXUS (Parlamento)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Cerebro Cognitivo
+# MISIÓN: Orquestar el Tool-Calling, aplicar reglas EDVC y mantener la ventana de contexto conversacional.
+# DEBERES: Gestionar memoria deslizante, aplicar concisión (250 palabras), invocar herramientas (max 2/turno).
+# PROHIBICIONES: Ejecutar órdenes de trading directamente, almacenar datos permanentemente en disco.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 import json
 import httpx
 from SOBERANO_03_NEXUS.parliament.tool_caller import MISTRAL_TOOLS, execute_tool

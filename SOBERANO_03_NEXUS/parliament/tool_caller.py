@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: tool_caller.py
 # MODULO: parliament
+# DEPARTAMENTO: 03 - NEXUS (Parlamento)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Ejecutor de Herramientas
+# MISIÓN: Ejecutar herramientas externas (Alpaca, GitHub) y devolver resultados estructurados.
+# DEBERES: Usar data.alpaca.markets, devolver errores con prefijo [ERROR DE HERRAMIENTA], aplicar .strip() a credenciales.
+# PROHIBICIONES: Reintentar herramientas fallidas >2 veces, enviar mensajes a Telegram, tomar decisiones de trading.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: tool_caller.py
+# MODULO: parliament
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Motor de Tool-Calling nativo para Mistral. Permite a la IA ejecutar
 #            acciones reales sobre las Apps Nucleares (GitHub, Alpaca, Redis).

@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: strategy_engine.py
 # MODULO: trading
+# DEPARTAMENTO: 03 - NEXUS (Trading)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Estratega Cuantitativo
+# MISIÓN: Evaluar estrategias de trading (RSI + Volumen) sobre datos históricos.
+# DEBERES: Calcular RSI con ventana móvil de 14 periodos, confirmar volumen sobre promedio, devolver señales.
+# PROHIBICIONES: Ejecutar órdenes, modificar datos de mercado.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: strategy_engine.py
+# MODULO: trading
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Motor de estrategias de trading. Evalúa datos de mercado y genera
 #            señales de COMPRA, VENTA o ESPERA con justificación lógica.

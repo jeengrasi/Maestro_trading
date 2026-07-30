@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: github_rag.py
 # MODULO: parliament
+# DEPARTAMENTO: 03 - NEXUS (Parlamento)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Bibliotecario RAG
+# MISIÓN: Consultar archivos de gobierno en GitHub cuando el usuario pregunta por normas.
+# DEBERES: Leer CONSTITUCION.md y NORMAS.md vía API de GitHub, devolver contexto normativo estructurado.
+# PROHIBICIONES: Modificar archivos de gobierno, ejecutar trading.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: github_rag.py
+# MODULO: parliament
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Obtener contexto de gobierno (Normas, Constitución) desde GitHub API
 #            para inyectar en los prompts de la IA y evitar alucinaciones.

@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: engine.py
 # MODULO: trading
+# DEPARTAMENTO: 03 - NEXUS (Trading)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Ejecutor Blindado
+# MISIÓN: Analizar mercados, calcular riesgo y ejecutar órdenes solo con autorización temporal.
+# DEBERES: Verificar Circuit Breaker, consultar AUTO_EJECUCION_TEMP, integrar Position Sizer (factor 0.4) y Risk Manager.
+# PROHIBICIONES: Enviar mensajes a Telegram, manejar memoria conversacional, ejecutar sin autorización válida.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: engine.py
+# MODULO: trading
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Motor de Trading - Logica de analisis autonomo y ejecucion de ordenes.
 # ULTIMA MODIFICACION: 2026-07-28

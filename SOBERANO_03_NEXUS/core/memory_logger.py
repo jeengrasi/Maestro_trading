@@ -1,6 +1,20 @@
 # ==============================================================================
 # ARCHIVO: memory_logger.py
 # MODULO: core
+# DEPARTAMENTO: 01 - MEMORIA
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Escribano Oficial
+# MISIÓN: Registrar todas las decisiones del sistema en la Bitácora Soberana (bitacora.md).
+# DEBERES: Escribir interacciones con fecha/hora, fallback a Redis en Vercel, cumplir formato EDVC.
+# PROHIBICIONES: Tomar decisiones de trading, modificar archivos de gobierno, enviar mensajes a Telegram.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
+# ==============================================================================
+# ARCHIVO: memory_logger.py
+# MODULO: core
 # SISTEMA: MAESTRO-NEXUS
 # PROPOSITO: Registrar decisiones en la Bitácora Soberana.
 #            Compatible con Vercel (Read-Only File System) usando fallback a Redis.

@@ -1,3 +1,17 @@
+# ==============================================================================
+# ARCHIVO: utils.py
+# MODULO: telegram
+# DEPARTAMENTO: 03 - NEXUS (Telecomunicaciones)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: El Mensajero Oficial
+# MISIÓN: Traducir decisiones del sistema a mensajes de Telegram con formato Markdown.
+# DEBERES: Respetar límite de 250 palabras, soportar botones inline, nunca fallar silenciosamente.
+# PROHIBICIONES: Tomar decisiones de trading, almacenar datos localmente.
+# ULTIMA MODIFICACION: 2026-07-30
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 import httpx
 import logging
 import os
