@@ -99,3 +99,18 @@ def get_contralor(redis_client):
     if contralor_instance is None:
         contralor_instance = NexusContralor(redis_client)
     return contralor_instance
+
+    def bloquear_ejecucion_no_autorizada(self, redis_client):
+        """
+        Verifica integridad. Si falla, elimina AUTO_EJECUCION_TEMP de Redis.
+        """
+        reporte = self.generar_reporte_integridad()
+        if "❌" in reporte or "⚠️" in reporte:
+            try:
+                redis_client.delete("AUTO_EJECUCION_TEMP")
+                logger.critical("🚨 CONTRALOR: Ejecución automática bloqueada por fallo de integridad.")
+                return False
+            except Exception as e:
+                logger.error(f"Error bloqueando en Redis: {e}")
+                return False
+        return True

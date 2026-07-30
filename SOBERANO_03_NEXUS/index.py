@@ -477,3 +477,16 @@ async def debug_env():
         "ALPACA_PAPER_evaluado": Config.ALPACA_PAPER,
         "TELEGRAM_TOKEN_len": len(os.getenv("TELEGRAM_BOT_TOKEN", ""))
     }
+
+@app.get("/debug/alpaca")
+async def debug_alpaca():
+    import httpx
+    key = os.getenv("ALPACA_API_KEY", "").strip()
+    secret = os.getenv("ALPACA_SECRET_KEY", "").strip()
+    try:
+        headers = {"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": secret}
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get("https://data.alpaca.markets/v2/stocks/AAPL/bars?timeframe=1Day&limit=1", headers=headers)
+        return {"status": r.status_code, "has_data": "bars" in r.json() if r.status_code == 200 else False}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)[:100]}

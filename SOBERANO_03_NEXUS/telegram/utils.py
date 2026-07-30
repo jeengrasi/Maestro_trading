@@ -38,5 +38,5 @@ async def send_telegram_chunked(text: str, chat_id: int = None):
             logger.error(f"Error enviando chunk {i+1} a Telegram: {e}")
 
 # Mantener la funcion original por compatibilidad, redirigiendo a la nueva
-async def send_telegram(text: str, chat_id: int = None):
+async def send_telegram(text: str, chat_id: int = None, reply_markup: dict = None):
     await send_telegram_chunked(text, chat_id)
