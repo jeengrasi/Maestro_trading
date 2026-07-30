@@ -207,4 +207,14 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
 
     escribir_en_bitacora(redis_client, f"CONSULTA_{role.upper()}", f"P: {message[:50]} | R: {respuesta[:50]}")
     
+
+    # --- FASE 2: GUARDAR RESPUESTA EN MEMORIA DESLIZANTE ---
+    if chat_id and redis_client:
+        try:
+            history_key = f"chat_history:{chat_id}"
+            redis_client.lpush(history_key, f"Asistente: {respuesta[:300]}...")
+            redis_client.expire(history_key, 3600)
+        except Exception as e:
+            logger.error(f"Error guardando respuesta en memoria: {e}")
+    # --- FIN GUARDAR RESPUESTA ---
     return respuesta
