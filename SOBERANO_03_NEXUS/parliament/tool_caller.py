@@ -53,39 +53,58 @@ async def execute_tool(tool_name: str, arguments: dict, redis_client=None) -> st
     """Ejecuta la herramienta solicitada y devuelve el resultado como string para la IA."""
     try:
         if tool_name == "get_alpaca_data":
+            """
+            Obtiene datos de mercado de Alpaca usando la API oficial de Market Data.
+            Documentación: https://docs.alpaca.markets/docs/market-data
+            """
             ticker = arguments.get("ticker", "").upper()
+            
+            # Credenciales (siempre usar .strip() para evitar espacios)
             api_key = os.getenv("ALPACA_API_KEY", "").strip()
             api_secret = os.getenv("ALPACA_SECRET_KEY", "").strip()
             
-            # CORRECCIÓN CRÍTICA: Los datos de mercado de Alpaca SIEMPRE usan data.alpaca.markets
+            if not api_key or not api_secret:
+                return "[ERROR DE HERRAMIENTA]: Credenciales de Alpaca no configuradas. Verifique ALPACA_API_KEY y ALPACA_SECRET_KEY en Vercel."
+            
+            # Endpoint oficial de Market Data (NO distingue entre paper/real)
             data_url = "https://data.alpaca.markets"
-            headers = {"APCA-API-KEY-ID": api_key, "APCA-API-SECRET-KEY": api_secret}
+            headers = {
+                "APCA-API-KEY-ID": api_key,
+                "APCA-API-SECRET-KEY": api_secret
+            }
             
-            # Intento 1: Barra de 1 día
-            url_day = f"{data_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                r_day = await client.get(url_day, headers=headers)
-            
-            if r_day.status_code == 200:
-                bars = r_day.json().get("bars", [])
-                if bars:
-                    bar = bars[0]
-                    return f"Datos de {ticker} (Diario): Precio=${bar.get('c')}, Volumen={bar.get('v')}. (Modo: {'Paper' if is_paper else 'Real'})"
-            
-            # Intento 2 (Fallback): Si no hay barra diaria (ej. mercado cerrado), buscar la última de 1 minuto
-            url_min = f"{data_url}/v2/stocks/{ticker}/bars?timeframe=1Min&limit=1&sort=desc"
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                r_min = await client.get(url_min, headers=headers)
-            
-            if r_min.status_code == 200:
-                bars_min = r_min.json().get("bars", [])
-                if bars_min:
-                    bar_min = bars_min[0]
-                    return f"Datos de {ticker} (Última cotización): Precio=${bar_min.get('c')}. (Mercado cerrado o sin datos diarios. Modo: {'Paper' if is_paper else 'Real'})"
-            
-            # Fallo total
-            return f"ADVERTENCIA CRÍTICA: No se encontraron datos de mercado para {ticker} en Alpaca (ni diarios ni recientes). No inventes precios. Informa al Director que el activo no tiene datos disponibles."
-
+            try:
+                # Obtener última barra diaria
+                url = f"{data_url}/v2/stocks/{ticker}/bars?timeframe=1Day&limit=1"
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(url, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    bars = data.get("bars", [])
+                    if bars and len(bars) > 0:
+                        bar = bars[0]
+                        precio = bar.get("c")
+                        volumen = bar.get("v")
+                        fecha = bar.get("t", "Fecha no disponible")
+                        
+                        # Calcular tendencia simple
+                        tendencia = "NEUTRAL"
+                        if len(bars) > 1:
+                            precio_anterior = bars[1].get("c")
+                            if precio > precio_anterior:
+                                tendencia = "ALCISTA"
+                            elif precio < precio_anterior:
+                                tendencia = "BAJISTA"
+                        
+                        return f"✅ Datos de {ticker} (Alpaca Market Data):\n- Precio: ${precio}\n- Volumen: {volumen}\n- Tendencia: {tendencia}\n- Fecha: {fecha}"
+                    else:
+                        return f"[ERROR DE HERRAMIENTA]: No se encontraron barras de precio para {ticker}."
+                else:
+                    return f"[ERROR DE HERRAMIENTA]: Alpaca respondió con código {response.status_code}. Detalle: {response.text[:100]}"
+                    
+            except Exception as e:
+                return f"[ERROR DE HERRAMIENTA]: Excepción al consultar Alpaca: {str(e)[:100]}"
 
         elif tool_name == "get_github_file":
             filepath = arguments.get("filepath", "")
