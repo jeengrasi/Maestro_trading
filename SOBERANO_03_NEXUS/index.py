@@ -539,3 +539,39 @@ async def debug_telegram():
                 return {"error": "Telegram respondió con error", "detail": data.get("description")}
     except Exception as e:
         return {"error": "Fallo al conectar con Telegram desde Vercel", "detail": str(e)[:100]}
+
+@app.get("/fix/webhook")
+async def fix_webhook():
+    import os
+    import httpx
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return {"error": "TELEGRAM_BOT_TOKEN no está configurada en Vercel"}
+    
+    webhook_url = "https://maestro-trading.vercel.app/webhook"
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Primero, obtener info actual
+            r1 = await client.get(f"https://api.telegram.org/bot{token}/getWebhookInfo")
+            info = r1.json()
+            
+            # Luego, setear el webhook a la URL correcta
+            r2 = await client.get(f"https://api.telegram.org/bot{token}/setWebhook", params={"url": webhook_url})
+            set_result = r2.json()
+            
+            return {
+                "antes": {
+                    "url": info.get("result", {}).get("url", "NO CONFIGURADA"),
+                    "pending": info.get("result", {}).get("pending_update_count", 0),
+                    "error": info.get("result", {}).get("last_error_message", "Ninguno")
+                },
+                "despues": {
+                    "url_seteada": webhook_url,
+                    "set_result": set_result.get("ok", False),
+                    "descripcion": set_result.get("description", "OK")
+                },
+                "instruccion": "Si 'set_result' es true, el bot está reparado. Pruebe en Telegram."
+            }
+    except Exception as e:
+        return {"error": str(e)[:200]}
