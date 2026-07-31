@@ -503,3 +503,13 @@ async def debug_alpaca():
         return {"status": r.status_code, "has_data": "bars" in r.json() if r.status_code == 200 else False}
     except Exception as e:
         return {"status": "error", "detail": str(e)[:100]}
+
+@app.get("/debug/vars")
+async def debug_vars():
+    import os
+    return {
+        "MISTRAL_API_KEY": "PRESENT" if os.getenv("MISTRAL_API_KEY", "").strip() else "MISSING",
+        "TELEGRAM_BOT_TOKEN": "PRESENT" if os.getenv("TELEGRAM_BOT_TOKEN", "").strip() else "MISSING",
+        "REDIS_URL": "PRESENT" if (os.getenv("REDIS_URL", "").strip() or os.getenv("UPSTASH_REDIS_REST_URL", "").strip()) else "MISSING",
+        "ALPACA_API_KEY": "PRESENT" if os.getenv("ALPACA_API_KEY", "").strip() else "MISSING"
+    }
