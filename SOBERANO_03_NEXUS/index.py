@@ -513,3 +513,29 @@ async def debug_vars():
         "REDIS_URL": "PRESENT" if (os.getenv("REDIS_URL", "").strip() or os.getenv("UPSTASH_REDIS_REST_URL", "").strip()) else "MISSING",
         "ALPACA_API_KEY": "PRESENT" if os.getenv("ALPACA_API_KEY", "").strip() else "MISSING"
     }
+
+@app.get("/debug/telegram")
+async def debug_telegram():
+    import os
+    import httpx
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        return {"error": "TELEGRAM_BOT_TOKEN no está configurada en Vercel"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(f"https://api.telegram.org/bot{token}/getWebhookInfo")
+            data = r.json()
+            if data.get("ok"):
+                result = data["result"]
+                return {
+                    "status": "OK",
+                    "webhook_url": result.get("url", "NO CONFIGURADA"),
+                    "pending_updates": result.get("pending_update_count", 0),
+                    "last_error": result.get("last_error_message", "Ninguno"),
+                    "nota": "El token está oculto por seguridad."
+                }
+            else:
+                return {"error": "Telegram respondió con error", "detail": data.get("description")}
+    except Exception as e:
+        return {"error": "Fallo al conectar con Telegram desde Vercel", "detail": str(e)[:100]}
