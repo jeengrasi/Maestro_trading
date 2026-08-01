@@ -4,148 +4,186 @@
 # DEPARTAMENTO: 03 - NEXUS (Trading)
 # SISTEMA: MAESTRO-NEXUS
 # ROL: El Ejecutor Blindado
-# MISIÓN: Analizar mercados, calcular riesgo y ejecutar órdenes solo con autorización temporal.
-# DEBERES: Verificar Circuit Breaker, consultar AUTO_EJECUCION_TEMP, integrar Position Sizer (factor 0.4) y Risk Manager.
-# PROHIBICIONES: Enviar mensajes a Telegram, manejar memoria conversacional, ejecutar sin autorización válida.
-# ULTIMA MODIFICACION: 2026-07-30
-# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
-# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# MISIÓN: Orquestar el análisis, riesgo y ejecución de Bracket Orders en Alpaca
+#         solo con autorización temporal válida.
+# DEBERES: Verificar AUTO_EJECUCION_TEMP, integrar Risk Manager, Strategy Engine 
+#          y Position Sizer. Delegar Stop-Loss al bróker (Fail-Closed).
+# PROHIBICIONES: Enviar mensajes a Telegram directamente, manejar memoria 
+#                conversacional, ejecutar sin autorización válida.
+# ULTIMA MODIFICACION: 2026-08-01
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01, Mesa Técnica
+# REFERENCIA: Constitución v7.1 (Art. 14), Fase 1.1 - Consenso Mesa
 # ==============================================================================
-
-# ==============================================================================
-# ARCHIVO: engine.py
-# MODULO: trading
-# SISTEMA: MAESTRO-NEXUS
-# PROPOSITO: Motor de Trading - Logica de analisis autonomo y ejecucion de ordenes.
-# ULTIMA MODIFICACION: 2026-07-28
-# AUTOR: Gerente (Qwen) | VALIDADO POR: Mesa Tecnica (Meta, Gemini)
-# ==============================================================================
-# [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: META, GEMINI, JEISSON_01]
-# MOTIVO: Extraer logica de trading de index.py a modulo independiente (Fase 7).
-# REF: Dictamen Mesa Tecnica AUDIT-MODULAR-FASE7-META-007
 
 import os
-import httpx
 import logging
 from datetime import datetime
+from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce, OrderClass
 from SOBERANO_03_NEXUS.config import Config
-from SOBERANO_03_NEXUS.trading import risk_manager
-from SOBERANO_03_NEXUS.config import get_auto_ejecucion_state
-from SOBERANO_03_NEXUS.trading.strategy_engine import evaluar_estrategia_rsi_volumen
-from SOBERANO_03_NEXUS.trading.position_sizer import calcular_tamano_posicion
+from SOBERANO_03_NEXUS.trading.risk_manager import RiskManager
+from SOBERANO_03_NEXUS.trading.strategy_engine import StrategyEngine
+from SOBERANO_03_NEXUS.trading.position_sizer import PositionSizer
 
 logger = logging.getLogger(__name__)
 
-async def analizar_y_ejecutar_sombra(ticker: str, redis_client, notify_callback, chat_id: int) -> dict:
+class TradingEngine:
     """
-    Analiza un activo usando datos nativos de Alpaca, evalúa la estrategia (Fase 14),
-    calcula el riesgo (Fase 14), verifica autorización (Fase 13) y ejecuta si corresponde.
+    El Ejecutor Blindado del sistema.
+    Orquesta el análisis, riesgo y ejecución de Bracket Orders en Alpaca.
     """
-    try:
-        # 1. Verificar Circuit Breaker
-        win_rate = redis_client.get("metricas:win_rate")
-        if win_rate and float(win_rate) < 0.40:
-            await notify_callback("🔴 *FRENOS ACTIVADOS*: Rendimiento inferior al 40%. Trading suspendido.", chat_id=chat_id)
-            return {"status": "blocked", "reason": "circuit_breaker"}
+    
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        self.config = Config()
+        
+        # Inicializar cliente de trading de Alpaca
+        self.trading_client = TradingClient(
+            self.config.ALPACA_API_KEY, 
+            self.config.ALPACA_SECRET_KEY, 
+            paper=self.config.ALPACA_PAPER
+        )
+        
+        # Inicializar módulos
+        self.risk_manager = RiskManager(redis_client)
+        self.strategy_engine = StrategyEngine()
+        
+        # Capital inicial de referencia (se actualiza dinámicamente)
+        self.capital_inicial = 10000.0  
 
-        # 2. Obtención de datos de mercado via Alpaca
-        api_key_data = os.getenv("ALPACA_API_KEY")
-        api_secret_data = os.getenv("ALPACA_SECRET_KEY")
-        headers_data = {"APCA-API-KEY-ID": api_key_data, "APCA-API-SECRET-KEY": api_secret_data}
+    def obtener_capital_disponible(self) -> float:
+        """Obtiene el capital disponible (Buying Power) de la cuenta de Alpaca."""
+        try:
+            account = self.trading_client.get_account()
+            buying_power = float(account.buying_power)
+            # Actualizar capital inicial si es la primera vez o si cambió significativamente
+            if self.capital_inicial == 10000.0:
+                self.capital_inicial = buying_power
+            return buying_power
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo capital de Alpaca: {e}")
+            return self.capital_inicial
+
+    def ejecutar_ciclo_trading(self, watchlist: list = None, confianza_ia_default: float = 85.0):
+        """
+        Ejecuta el ciclo completo de trading para la watchlist.
         
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            url_datos = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars?timeframe=1Day&limit=14"
-            r_datos = await client.get(url_datos, headers=headers_data)
+        Args:
+            watchlist: Lista de símbolos a analizar.
+            confianza_ia_default: Confianza por defecto (85.0 = factor 1.0, riesgo 0.4%).
+                                  En el futuro, esto vendrá del parliament/core.py.
+        """
+        if watchlist is None:
+            watchlist = ["AAPL", "MSFT", "GOOGL", "SPY", "GLD"]
             
-        if r_datos.status_code != 200 or not r_datos.json().get("bars"):
-            await notify_callback(f"⚠️ *Error*: No se encontraron datos para {ticker}.", chat_id=chat_id)
-            return {"status": "error", "reason": "no_data"}
+        logger.info(f"🚀 Iniciando ciclo de trading. Watchlist: {watchlist}")
+        
+        # 1. Verificar autorización temporal
+        temp_auth = self.redis.get("AUTO_EJECUCION_TEMP")
+        if not temp_auth or (isinstance(temp_auth, bytes) and temp_auth.decode().lower() != "true"):
+            logger.info("⏸️ AUTO_EJECUCION_TEMP no está activo. Ciclo de trading abortado.")
+            return {"status": "abortado", "razon": "AUTO_EJECUCION_TEMP inactivo"}
             
-        bars = r_datos.json()["bars"]
-        precio = float(bars[-1]["c"])
-        tendencia = "ALCISTA" if bars[-1]["c"] > bars[0]["c"] else "BAJISTA"
+        # 2. Obtener capital actual
+        capital_actual = self.obtener_capital_disponible()
+        logger.info(f"💰 Capital disponible: ${capital_actual:.2f}")
         
-        # 3. Evaluación con Cerebro Financiero (Fase 14)
-        resultado_estrategia = evaluar_estrategia_rsi_volumen(bars, ticker)
-        senal = resultado_estrategia["senal"]
-        razon_estrategia = resultado_estrategia["razon"]
+        resultados = []
         
-        es_compra = (senal == "COMPRA")
-        modo = "🧪 PAPER" if os.getenv("ALPACA_PAPER", "true").lower() == "true" else "💰 REAL"
-        
-        mensaje = f"📊 *ANÁLISIS AUTÓNOMO: {ticker}*\n\n"
-        mensaje += f"💵 *Precio:* ${precio:.2f}\n"
-        mensaje += f"📈 *Tendencia:* {tendencia}\n"
-        mensaje += f"🧠 *Señal:* {senal}\n"
-        mensaje += f"📝 *Razón:* {razon_estrategia}\n\n"
-        
-        resultado = {
-            "status": "analyzed",
-            "ticker": ticker,
-            "precio": precio,
-            "senal": senal,
-            "ejecutado": False
-        }
-        
-        # 4. Lógica si la señal es COMPRA
-        if es_compra:
-            # 4.1 Cálculo de Posición (Fase 14: Blindaje Matemático con factor 0.4)
-            capital_base = float(os.getenv("CAPITAL_BASE", "10000.0"))
-            precio_stop_loss = precio * 0.95
-            
-            sizing = calcular_tamano_posicion(capital_base, precio, precio_stop_loss, riesgo_maximo_pct=0.01)
-            
-            if sizing.get("senal") == "RECHAZADO":
-                mensaje += f"🚫 *RIESGO:* {sizing['razon']}\n\n"
-                resultado["status"] = "rejected_by_sizer"
-            else:
-                mensaje += f"🛡️ *Position Sizing:* {sizing['mensaje']}\n\n"
+        for symbol in watchlist:
+            try:
+                logger.info(f"🔍 Analizando {symbol}...")
                 
-                # 4.2 Verificación de Autorización Temporal (Fase 13)
-                if not get_auto_ejecucion_state(redis_client):
-                    mensaje += "⚠️ *MODO SOMBRA*: Ejecución automática desactivada o expirada.\n\n"
-                    resultado["status"] = "shadow_pending_auth"
-                else:
-                    # 4.3 Ejecución Real
-                    api_key_ord = os.getenv("ALPACA_API_KEY")
-                    api_secret_ord = os.getenv("ALPACA_SECRET_KEY")
-                    is_paper = os.getenv("ALPACA_PAPER", "true").lower() == "true"
-                    base_url = "https://paper-api.alpaca.markets" if is_paper else "https://api.alpaca.markets"
-                    
-                    qty = sizing.get("acciones", 1)
-                    payload = {
-                        "symbol": ticker,
-                        "qty": qty,
-                        "side": "buy",
-                        "type": "market",
-                        "time_in_force": "day"
+                # 3. Análisis Técnico
+                analisis = self.strategy_engine.calcular_confluencia(symbol)
+                
+                if analisis["señal"] != "COMPRA":
+                    logger.info(f"⏸️ {symbol}: {analisis['razon']}")
+                    resultados.append({"symbol": symbol, "accion": "ESPERA", "razon": analisis["razon"]})
+                    continue
+                
+                # 4. Evaluación de Riesgo (Risk Manager)
+                precio_actual = analisis["precio_actual"]
+                atr_14 = analisis["atr_14"]
+                
+                # Calcular Stop Loss dinámico (2x ATR)
+                stop_loss = precio_actual - (2 * atr_14) if atr_14 > 0 else precio_actual * 0.95
+                
+                evaluacion_riesgo = self.risk_manager.evaluar_operacion(
+                    symbol=symbol,
+                    capital_actual=capital_actual,
+                    capital_inicial=self.capital_inicial,
+                    confianza_ia=confianza_ia_default
+                )
+                
+                if not evaluacion_riesgo["autorizado"]:
+                    logger.warning(f"🛑 {symbol}: Operación bloqueada por Risk Manager. Razón: {evaluacion_riesgo['razon']}")
+                    resultados.append({"symbol": symbol, "accion": "BLOQUEADO", "razon": evaluacion_riesgo["razon"]})
+                    continue
+                
+                # 5. Cálculo de Posición
+                factor_ia = evaluacion_riesgo["factor_riesgo"]
+                position_sizer = PositionSizer(capital_actual)
+                tamaño_posicion = position_sizer.calcular_tamaño_posicion(
+                    precio_entrada=precio_actual,
+                    stop_loss=stop_loss,
+                    factor_ia=factor_ia
+                )
+                
+                if tamaño_posicion["acciones"] <= 0:
+                    logger.warning(f"⚠️ {symbol}: Posición inválida. Razón: {tamaño_posicion['razon']}")
+                    resultados.append({"symbol": symbol, "accion": "RECHAZADO", "razon": tamaño_posicion["razon"]})
+                    continue
+                
+                # 6. Ejecución de Bracket Order (Fail-Closed)
+                logger.info(f"✅ {symbol}: Ejecutando Bracket Order. Acciones: {tamaño_posicion['acciones']}")
+                
+                # Calcular Take Profit (Relación Riesgo/Beneficio 1:2)
+                riesgo_por_accion = precio_actual - stop_loss
+                take_profit = precio_actual + (2 * riesgo_por_accion)
+                
+                # Crear orden de mercado con legs de Stop Loss y Take Profit
+                order_data = {
+                    "symbol": symbol,
+                    "qty": tamaño_posicion["acciones"],
+                    "side": OrderSide.BUY,
+                    "type": "market",
+                    "time_in_force": TimeInForce.DAY,
+                    "order_class": OrderClass.BRACKET,
+                    "take_profit": {
+                        "limit_price": round(take_profit, 2)
+                    },
+                    "stop_loss": {
+                        "stop_price": round(stop_loss, 2)
                     }
-                    headers_ord = {"APCA-API-KEY-ID": api_key_ord, "APCA-API-SECRET-KEY": api_secret_ord}
-                    
-                    async with httpx.AsyncClient(timeout=10.0) as client_ord:
-                        r_ord = await client_ord.post(f"{base_url}/v2/orders", headers=headers_ord, json=payload)
-                        
-                    if r_ord.status_code == 200:
-                        mensaje += f"✅ *ORDEN EJECUTADA* en {modo}.\n\n"
-                        resultado["ejecutado"] = True
-                        resultado["status"] = "executed"
-                    else:
-                        mensaje += f"❌ *FALLO DE EJECUCIÓN*: {r_ord.text[:100]}\n\n"
-                        resultado["status"] = "execution_failed"
+                }
+                
+                # Ejecutar orden en Alpaca
+                orden = self.trading_client.submit_order(order_data=order_data)
+                
+                logger.info(f"🎯 {symbol}: Orden ejecutada exitosamente. Order ID: {orden.id}")
+                
+                resultados.append({
+                    "symbol": symbol,
+                    "accion": "COMPRADO",
+                    "orden_id": orden.id,
+                    "cantidad": tamaño_posicion["acciones"],
+                    "precio_entrada": round(precio_actual, 2),
+                    "stop_loss": round(stop_loss, 2),
+                    "take_profit": round(take_profit, 2),
+                    "riesgo_pct": tamaño_posicion["riesgo_pct"]
+                })
+                
+            except Exception as e:
+                logger.error(f"❌ Error procesando {symbol}: {e}")
+                resultados.append({"symbol": symbol, "accion": "ERROR", "razon": str(e)[:100]})
+                
+        return {"status": "completado", "resultados": resultados}
 
-        # 5. Construir botones inline y enviar mensaje (Fase 13)
-        inline_keyboard = {
-            "inline_keyboard": [
-                [
-                    {"text": "✅ AUTORIZAR AUTO 1H", "callback_data": f"AUTH_{ticker}"},
-                    {"text": "👁️ SOLO SOMBRA", "callback_data": f"SHADOW_{ticker}"}
-                ]
-            ]
-        }
-        await notify_callback(mensaje, chat_id=chat_id, reply_markup=inline_keyboard)
-        
-        return resultado
-        
-    except Exception as e:
-        await notify_callback(f"❌ *ERROR CRÍTICO* en análisis de {ticker}: {str(e)[:100]}", chat_id=chat_id)
-        return {"status": "error", "reason": str(e)[:100]}
+# ==============================================================================
+# REGISTRO DE CAMBIOS (CHANGELOG VIVO)
+# ==============================================================================
+# [2026-08-01] [Qwen]: Integración de RiskManager, StrategyEngine y PositionSizer. 
+#                       Ejecución de Bracket Orders con delegación de SL al bróker.
+# ==============================================================================
