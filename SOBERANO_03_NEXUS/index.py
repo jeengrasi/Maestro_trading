@@ -53,6 +53,35 @@ from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 from SOBERANO_03_NEXUS.telegram.inline_actions import handle_autorizacion_callback
 
+# ================================================
+# INICIALIZACIÓN DE REDIS (CORRECCIÓN CRÍTICA)
+# ================================================
+# [MOD-2026-07-31] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+# MOTIVO: La variable 'redis' se usaba en telegram_webhook sin estar inicializada,
+# causando NameError y Error 500 en Vercel.
+try:
+    # Intentar usar Upstash Redis (entorno Vercel)
+    redis = Redis(
+        url=os.getenv("UPSTASH_REDIS_REST_URL", Config.REDIS_URL if hasattr(Config, 'REDIS_URL') else ""),
+        token=os.getenv("UPSTASH_REDIS_REST_TOKEN", Config.REDIS_PASSWORD if hasattr(Config, 'REDIS_PASSWORD') else "")
+    )
+    # Prueba de conexión rápida
+    redis.ping()
+except Exception as e:
+    logging.warning(f"⚠️ Fallo al conectar con Upstash Redis: {e}. Intentando fallback...")
+    try:
+        # Fallback a redis-py estándar (entorno local o alternativo)
+        import redis as std_redis
+        redis_url = os.getenv("REDIS_URL", getattr(Config, 'REDIS_URL', 'redis://localhost:6379'))
+        redis = std_redis.from_url(redis_url, decode_responses=True)
+        redis.ping()
+        logging.info("✅ Conectado a Redis estándar.")
+    except Exception as e2:
+        logging.error(f"❌ CRÍTICO: No se pudo conectar a ningún servicio Redis. Error: {e2}")
+        redis = None
+# ================================================
+
+
 # [MOD-2026-07-28] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
 # MOTIVO: Preparado para integraciones futuras. Nota: El Modo Sombra usa Alpaca Market Data 
 # nativo para evitar bloqueos de yfinance en entornos serverless (Vercel).
