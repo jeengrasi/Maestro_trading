@@ -1,3 +1,16 @@
+# ==============================================================================
+# ARCHIVO: scheduler.py
+# DEPARTAMENTO: 02 - CORE (Ejecución)
+# SISTEMA: MAESTRO-NEXUS
+# ROL: Planificador de Tareas
+# MISIÓN: Garantizar ejecuciones cíclicas sin bloqueo de memoria y con manejo estricto de excepciones.
+# DEBERES: Cumplir con la Constitución, no hardcodear credenciales, registrar errores.
+# PROHIBICIONES: Violar las reglas transversales del Manifiesto de Roles, ejecutar lógica de trading directa.
+# ULTIMA MODIFICACION: 2026-08-01
+# AUTOR: Gerente Qwen | VALIDADOR: Director JEISSON_01
+# REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
+# ==============================================================================
+
 #!/usr/bin/env python3
 """
 Módulo de Planificación y Coordinación Temporal - Parlamento Nexus
