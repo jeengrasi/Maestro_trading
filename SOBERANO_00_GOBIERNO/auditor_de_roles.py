@@ -7,6 +7,7 @@
 # ROL: El Auditor Automático de Cumplimiento
 # MISIÓN: Verificar que todos los scripts cumplan con su Ficha de Identidad y no violen sus prohibiciones.
 # ==============================================================================
+# PROHIBICIONES: Violar la confidencialidad de los datos, modificar archivos que no sean de auditoría, o alterar la lógica de negocio.
 import os
 import re
 import sys
