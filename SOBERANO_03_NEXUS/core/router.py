@@ -30,6 +30,8 @@ import logging
 from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.core.memory_logger import registrar_en_bitacora
 
+from SOBERANO_03_NEXUS.telegram.utils import send_telegram
+
 logger = logging.getLogger(__name__)
 
 async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegram_func):
