@@ -135,6 +135,22 @@ async def procesar_intencion(text: str, chat_id: int, redis_client, send_telegra
             await send_telegram_func(f"❌ *ERROR AL EJECUTAR AUDITOR*:\n{str(e)[:100]}", chat_id=chat_id)
         return True
 
+    # [MOD-2026-07-31] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
+    # MANEJO PROACTIVO DE SALUDOS Y CONSULTAS VAGAS (Paso 2.1)
+    if text_lower in ["hola", "buenos días", "buenas tardes", "buenas noches", "qué tal", "saludos"]:
+        menu = (
+            "🏛️ *SALUDOS, DIRECTOR.*\n\n"
+            "El sistema Maestro-Nexus está operativo y subordinado a su Constitución.\n\n"
+            "*CAPACIDADES DISPONIBLES:*\n"
+            "• `/auditar_roles` - Estado constitucional del sistema\n"
+            "• `/balance` - Posición financiera actual\n"
+            "• `/analizar [ACTIVO]` - Análisis técnico (ej: `/analizar AAPL`)\n"
+            "• `¿Por qué [decisión]?` - Explicabilidad con cita normativa\n\n"
+            "_¿En qué puedo asistirle hoy?_"
+        )
+        await send_telegram(menu, chat_id)
+        return True
+    
     # 7. PARLAMENTO: Debate general con IA (Fallback)
     else:
         from SOBERANO_03_NEXUS.parliament.core import call_ia
