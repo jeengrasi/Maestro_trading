@@ -83,6 +83,24 @@ def sanitize_prompt(prompt: str) -> str:
     return prompt.strip()
 
 async def call_ia(role: str, message: str, redis_client=None, chat_id: str = None) -> str:
+    # --- FASE 2: FLUIDEZ CONVERSACIONAL (DEFINICIÓN SEGURA) ---
+    history_context = ""
+    if chat_id and redis_client:
+        try:
+            history_key = f"chat_history:{chat_id}"
+            history = redis_client.lrange(history_key, 0, 3)
+            history.reverse()
+            if history:
+                history_context = "\n[CONTEXTO DE CONVERSACIÓN RECIENTE]\n"
+                for h in history:
+                    h_str = h.decode() if isinstance(h, bytes) else h
+                    history_context += f"{h_str}\n"
+                history_context += "[FIN CONTEXTO]\n"
+            redis_client.lpush(history_key, f"Usuario: {message}")
+            redis_client.expire(history_key, 3600)
+        except Exception as e:
+            import logging; logging.error(f'Error en memoria: {e}')
+    # --- FIN FLUIDEZ CONVERSACIONAL ---
     contexto = leer_contexto_obligatorio(redis_client)
     
     # [MOD-2026-07-27] [AUTOR: Qwen] [VALIDADOR: JEISSON_01]
@@ -216,5 +234,14 @@ REGLAS DE CONCISION EJECUTIVA (OBLIGATORIO):
             redis_client.expire(history_key, 3600)
         except Exception as e:
             logger.error(f"Error guardando respuesta en memoria: {e}")
+    # --- FIN GUARDAR RESPUESTA ---
+    # --- FASE 2: GUARDAR RESPUESTA EN MEMORIA ---
+    if chat_id and redis_client:
+        try:
+            history_key = f"chat_history:{chat_id}"
+            redis_client.lpush(history_key, f"Asistente: {respuesta[:300]}...")
+            redis_client.expire(history_key, 3600)
+        except Exception as e:
+            import logging; logging.error(f'Error guardando respuesta: {e}')
     # --- FIN GUARDAR RESPUESTA ---
     return respuesta
