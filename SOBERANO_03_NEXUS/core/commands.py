@@ -11,7 +11,7 @@
 # REFERENCIA: SOBERANO_00_GOBIERNO/ROLES_Y_MISIONES.md
 # ==============================================================================
 
-from SOBERANO_03_NEXUS.autonomy.backtester import ejecutar_backtest
+# from SOBERANO_03_NEXUS.autonomy.backtester import ejecutar_backtest  # LEGACY
 from SOBERANO_03_NEXUS.autonomy.reflexion_agent import generar_reflexion_y_propuesta
 # ==============================================================================
 # ARCHIVO: commands.py

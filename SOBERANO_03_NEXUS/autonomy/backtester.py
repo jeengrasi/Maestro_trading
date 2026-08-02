@@ -28,7 +28,7 @@
 import os
 import httpx
 import logging
-from SOBERANO_03_NEXUS.trading.strategy_engine import evaluar_estrategia_rsi_volumen
+# from SOBERANO_03_NEXUS.trading.strategy_engine import evaluar_estrategia_rsi_volumen  # LEGACY: Reemplazado por StrategyEngine
 from SOBERANO_03_NEXUS.trading.position_sizer import calcular_tamano_posicion
 
 logger = logging.getLogger(__name__)

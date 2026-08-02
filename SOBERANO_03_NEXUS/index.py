@@ -48,7 +48,6 @@ from SOBERANO_03_NEXUS.telegram.utils import send_telegram
 from SOBERANO_03_NEXUS.core.router import procesar_intencion
 from SOBERANO_03_NEXUS.core.diagnostics import router as diagnostics_router
 from SOBERANO_03_NEXUS.core.memory import bootstrap_nexus_memory
-from SOBERANO_03_NEXUS.core.commands import handle_telegram_command
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 from SOBERANO_03_NEXUS.telegram.inline_actions import handle_autorizacion_callback
