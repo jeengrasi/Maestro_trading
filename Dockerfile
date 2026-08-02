@@ -16,3 +16,5 @@ ENV PYTHONUNBUFFERED=1
 
 # Railway mapeará automáticamente el puerto 8080 al exterior
 CMD uvicorn SOBERANO_03_NEXUS.index:app --host 0.0.0.0 --port 8080
+
+# FORCE REBUILD TIMESTAMP: 2026-08-01 23:43:15
