@@ -52,6 +52,7 @@ from SOBERANO_03_NEXUS.core.commands import handle_telegram_command
 from SOBERANO_03_NEXUS.trading.engine import analizar_y_ejecutar_sombra
 from SOBERANO_03_NEXUS.autonomy.scheduler import ejecutar_analisis_periodico
 from SOBERANO_03_NEXUS.telegram.inline_actions import handle_autorizacion_callback
+from SOBERANO_03_NEXUS.telegram.webhook import router as telegram_router
 
 # ================================================
 # INICIALIZACIÓN DE REDIS (CORRECCIÓN CRÍTICA)
@@ -99,6 +100,7 @@ app = FastAPI()
 
 # Registrar routers modulares
 app.include_router(diagnostics_router)
+app.include_router(telegram_router)
 
 # ================================================
 # SECCIÓN 3: CONEXIONES A SERVICIOS

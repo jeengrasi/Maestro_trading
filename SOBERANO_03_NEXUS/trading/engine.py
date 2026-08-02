@@ -25,6 +25,8 @@ from SOBERANO_03_NEXUS.config import Config
 from SOBERANO_03_NEXUS.trading.risk_manager import RiskManager
 from SOBERANO_03_NEXUS.trading.strategy_engine import StrategyEngine
 from SOBERANO_03_NEXUS.trading.position_sizer import PositionSizer
+from SOBERANO_03_NEXUS.telegram.utils import send_telegram
+from SOBERANO_03_NEXUS.telegram.formatters import format_nueva_posicion
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -115,6 +117,21 @@ class TradingEngine:
                 
                 orden = self.trading_client.submit_order(order_data=order_data)
                 logger.info(f"🎯 {symbol}: Orden Bracket ejecutada. ID: {orden.id}")
+                
+                # NOTIFICACIÓN AL DIRECTOR (Fail-Safe)
+                try:
+                    import asyncio
+                    chat_id = os.getenv('DIRECTOR_CHAT_ID', '')
+                    if chat_id:
+                        msg = format_nueva_posicion(
+                            symbol=symbol, cantidad=tamaño_posicion['acciones'],
+                            precio_entrada=precio_actual, stop_loss=round(stop_loss, 2),
+                            take_profit=round(take_profit, 2), riesgo_pct=tamaño_posicion['riesgo_pct'],
+                            confianza_ia=confianza_ia_default, razon='Confluencia técnica validada'
+                        )
+                        asyncio.run(send_telegram(msg, chat_id=int(chat_id)))
+                except Exception as notif_err:
+                    logger.warning(f'⚠️ Fallo al enviar notificación Telegram: {notif_err}')
                 
                 resultados.append({
                     "symbol": symbol, "accion": "COMPRADO", "orden_id": orden.id,
