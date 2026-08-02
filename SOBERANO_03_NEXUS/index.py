@@ -84,6 +84,72 @@ async def debug_alpaca():
         
     return resultado
 
+
+@app.get("/debug-alpaca-dual")
+async def debug_alpaca_dual():
+    import httpx
+    
+    api_key = os.getenv("ALPACA_API_KEY", "").strip()
+    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
+    
+    resultado = {
+        "servidor": "Railway (En vivo)",
+        "variables_saneadas": {
+            "API_KEY_longitud": len(api_key),
+            "API_KEY_repr": repr(api_key[:10]) + "..." if api_key else "VACIO",
+            "SECRET_KEY_longitud": len(secret_key),
+        },
+        "prueba_paper": "Pendiente...",
+        "prueba_live": "Pendiente...",
+        "diagnostico_final": "Pendiente..."
+    }
+    
+    if not api_key or not secret_key:
+        resultado["diagnostico_final"] = "FALLIDO: Variables vacías"
+        return resultado
+    
+    headers = {
+        "APCA-API-KEY-ID": api_key,
+        "APCA-API-SECRET-KEY": secret_key
+    }
+    
+    # Probar Paper Trading
+    try:
+        async with httpx.AsyncClient() as client:
+            resp_paper = await client.get("https://paper-api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
+            resultado["prueba_paper"] = {
+                "status_code": resp_paper.status_code,
+                "respuesta": resp_paper.text[:200]
+            }
+    except Exception as e:
+        resultado["prueba_paper"] = f"ERROR: {str(e)}"
+    
+    # Probar Live Trading
+    try:
+        async with httpx.AsyncClient() as client:
+            resp_live = await client.get("https://api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
+            resultado["prueba_live"] = {
+                "status_code": resp_live.status_code,
+                "respuesta": resp_live.text[:200]
+            }
+    except Exception as e:
+        resultado["prueba_live"] = f"ERROR: {str(e)}"
+    
+    # Diagnóstico final
+    paper_ok = isinstance(resultado["prueba_paper"], dict) and resultado["prueba_paper"].get("status_code") == 200
+    live_ok = isinstance(resultado["prueba_live"], dict) and resultado["prueba_live"].get("status_code") == 200
+    
+    if paper_ok and not live_ok:
+        resultado["diagnostico_final"] = "✅ CLAVES DE PAPER TRADING - Use endpoint paper-api"
+    elif live_ok and not paper_ok:
+        resultado["diagnostico_final"] = "⚠️ CLAVES DE LIVE TRADING - Las claves son de cuenta real, no paper"
+    elif paper_ok and live_ok:
+        resultado["diagnostico_final"] = "❌ ANOMALÍA: Ambas cuentas aceptan las claves"
+    else:
+        resultado["diagnostico_final"] = "❌ CLAVES INVÁLIDAS: Ninguna cuenta acepta estas credenciales"
+    
+    return resultado
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
