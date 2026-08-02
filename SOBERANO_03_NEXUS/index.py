@@ -40,42 +40,47 @@ async def debug_env():
     }
 
 
+
 @app.get("/debug-alpaca")
 async def debug_alpaca():
-    # Diagnóstico en vivo de la conexión a Alpaca DESDE el servidor de Railway
-    api_key = os.getenv("ALPACA_API_KEY", "").strip()
-    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
-    is_paper = os.getenv("ALPACA_PAPER", "false").lower() == "true"
+    import httpx
+    import json
+    
+    api_key = os.getenv("ALPACA_API_KEY", "")
+    secret_key = os.getenv("ALPACA_SECRET_KEY", "")
     
     resultado = {
         "servidor": "Railway (En vivo)",
         "variables_leidas": {
-            "ALPACA_API_KEY_longitud": len(api_key),
-            "ALPACA_API_KEY_primeros_4": api_key[:4] + "..." if api_key else "VACIO",
-            "ALPACA_SECRET_KEY_longitud": len(secret_key),
-            "ALPACA_PAPER_valor": is_paper
+            "API_KEY_longitud": len(api_key),
+            "API_KEY_inicio": api_key[:4] + "..." if len(api_key) > 4 else "VACIO",
+            "SECRET_KEY_longitud": len(secret_key),
         },
-        "intento_de_conexion": "Pendiente..."
+        "prueba_http_directa": "Pendiente..."
     }
     
     if not api_key or not secret_key:
-        resultado["intento_de_conexion"] = "FALLIDO: Las claves están vacías en Railway."
+        resultado["prueba_http_directa"] = "FALLIDO: Variables vacías en Railway."
         return resultado
         
     try:
-        from alpaca.trading.client import TradingClient
-        client = TradingClient(api_key=api_key, secret_key=secret_key, paper=is_paper)
-        account = client.get_account()
-        
-        resultado["intento_de_conexion"] = "✅ EXITOSA"
-        resultado["detalles_cuenta"] = {
-            "status": account.status,
-            "buying_power": float(account.buying_power),
-            "equity": float(account.equity)
+        # Petición HTTP cruda directa a Paper Trading, sin librerías intermediarias
+        url = "https://paper-api.alpaca.markets/v2/account"
+        headers = {
+            "APCA-API-KEY-ID": api_key,
+            "APCA-API-SECRET-KEY": secret_key
         }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers, timeout=10.0)
+            
+            resultado["prueba_http_directa"] = {
+                "status_code": response.status_code,
+                "respuesta_de_alpaca": response.text
+            }
+            
     except Exception as e:
-        resultado["intento_de_conexion"] = "❌ FALLIDO"
-        resultado["error_exacto_de_alpaca"] = str(e)
+        resultado["prueba_http_directa"] = f"ERROR DE RED: {str(e)}"
         
     return resultado
 
