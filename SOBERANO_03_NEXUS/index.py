@@ -39,6 +39,46 @@ async def debug_env():
         "instruccion": "Si 'DIRECTOR_CHAT_ID_valor' es 'NO_CONFIGURADO' o un numero que no es el suyo, ese es el problema."
     }
 
+
+@app.get("/debug-alpaca")
+async def debug_alpaca():
+    # Diagnóstico en vivo de la conexión a Alpaca DESDE el servidor de Railway
+    api_key = os.getenv("ALPACA_API_KEY", "").strip()
+    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
+    is_paper = os.getenv("ALPACA_PAPER", "false").lower() == "true"
+    
+    resultado = {
+        "servidor": "Railway (En vivo)",
+        "variables_leidas": {
+            "ALPACA_API_KEY_longitud": len(api_key),
+            "ALPACA_API_KEY_primeros_4": api_key[:4] + "..." if api_key else "VACIO",
+            "ALPACA_SECRET_KEY_longitud": len(secret_key),
+            "ALPACA_PAPER_valor": is_paper
+        },
+        "intento_de_conexion": "Pendiente..."
+    }
+    
+    if not api_key or not secret_key:
+        resultado["intento_de_conexion"] = "FALLIDO: Las claves están vacías en Railway."
+        return resultado
+        
+    try:
+        from alpaca.trading.client import TradingClient
+        client = TradingClient(api_key=api_key, secret_key=secret_key, paper=is_paper)
+        account = client.get_account()
+        
+        resultado["intento_de_conexion"] = "✅ EXITOSA"
+        resultado["detalles_cuenta"] = {
+            "status": account.status,
+            "buying_power": float(account.buying_power),
+            "equity": float(account.equity)
+        }
+    except Exception as e:
+        resultado["intento_de_conexion"] = "❌ FALLIDO"
+        resultado["error_exacto_de_alpaca"] = str(e)
+        
+    return resultado
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
