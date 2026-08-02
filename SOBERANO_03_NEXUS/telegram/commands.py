@@ -29,11 +29,20 @@ class CommandProcessor:
     def __init__(self, redis_client: Redis):
         self.redis = redis_client
         self.config = Config()
-        self.trading_client = TradingClient(
-            self.config.ALPACA_API_KEY,
-            self.config.ALPACA_SECRET_KEY,
-            paper=self.config.ALPACA_PAPER
-        )
+        # Usar URL explícita de Paper Trading para evitar problemas
+        if self.config.ALPACA_PAPER:
+            self.trading_client = TradingClient(
+                self.config.ALPACA_API_KEY,
+                self.config.ALPACA_SECRET_KEY,
+                paper=True,
+                url_override="https://paper-api.alpaca.markets"
+            )
+        else:
+            self.trading_client = TradingClient(
+                self.config.ALPACA_API_KEY,
+                self.config.ALPACA_SECRET_KEY,
+                paper=False
+            )
         self.director_chat_id = int(os.getenv("DIRECTOR_CHAT_ID", "0"))
     
     def verificar_autorizacion(self, chat_id: int) -> bool:
