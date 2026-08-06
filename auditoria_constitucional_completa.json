@@ -1,0 +1,341 @@
+{
+  "archivos_encontrados": [
+    {
+      "ruta": "./SOBERANO_02_CORE/NORMATIVA_DEPARTAMENTAL.md",
+      "nombre": "NORMATIVA_DEPARTAMENTAL.md",
+      "tamano_kb": 0.27,
+      "lineas": 5,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/NORMATIVA_DEPARTAMENTAL.md",
+      "nombre": "NORMATIVA_DEPARTAMENTAL.md",
+      "tamano_kb": 0.3,
+      "lineas": 5,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/RESCATE/MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md",
+      "nombre": "MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md",
+      "tamano_kb": 1.52,
+      "lineas": 24,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/AUDITS/VALIDACION_GOBIERNO_2026-07-22_23-32-09.md",
+      "nombre": "VALIDACION_GOBIERNO_2026-07-22_23-32-09.md",
+      "tamano_kb": 0.51,
+      "lineas": 19,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/ACTAS/NEXUS-ACTA-20260724_185145.md",
+      "nombre": "NEXUS-ACTA-20260724_185145.md",
+      "tamano_kb": 0.6,
+      "lineas": 16,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/ACTAS/ACTAS_2026_07.md",
+      "nombre": "ACTAS_2026_07.md",
+      "tamano_kb": 0.5,
+      "lineas": 11,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_gobierno_definitivo.sh",
+      "nombre": "validar_gobierno_definitivo.sh",
+      "tamano_kb": 3.18,
+      "lineas": 107,
+      "clasificacion": "script_operativo"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/inspeccionar_gobierno.sh",
+      "nombre": "inspeccionar_gobierno.sh",
+      "tamano_kb": 0.76,
+      "lineas": 27,
+      "clasificacion": "script_operativo"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/cerrar_gobierno_v8.2_definitivo.sh",
+      "nombre": "cerrar_gobierno_v8.2_definitivo.sh",
+      "tamano_kb": 4.9,
+      "lineas": 112,
+      "clasificacion": "script_operativo"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_constitucion_guardada.sh",
+      "nombre": "validar_constitucion_guardada.sh",
+      "tamano_kb": 0.0,
+      "lineas": 1,
+      "clasificacion": "script_operativo"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/ver_constitucion_linea_a_linea.sh",
+      "nombre": "ver_constitucion_linea_a_linea.sh",
+      "tamano_kb": 0.8,
+      "lineas": 25,
+      "clasificacion": "script_operativo"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/CONSTITUCION.md",
+      "nombre": "CONSTITUCION.md",
+      "tamano_kb": 5.97,
+      "lineas": 63,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NORMAS.md",
+      "nombre": "NORMAS.md",
+      "tamano_kb": 3.42,
+      "lineas": 109,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NEXUS_MANIFEST.json",
+      "nombre": "NEXUS_MANIFEST.json",
+      "tamano_kb": 0.95,
+      "lineas": 35,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NORMATIVA_DEPARTAMENTAL.md",
+      "nombre": "NORMATIVA_DEPARTAMENTAL.md",
+      "tamano_kb": 0.35,
+      "lineas": 5,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/REGLAMENTO_EAD.md",
+      "nombre": "REGLAMENTO_EAD.md",
+      "tamano_kb": 1.4,
+      "lineas": 26,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/DOCS/seguridad/protocolo.md",
+      "nombre": "protocolo.md",
+      "tamano_kb": 0.4,
+      "lineas": 19,
+      "clasificacion": "util_vigente"
+    },
+    {
+      "ruta": "./SOBERANO_03_NEXUS/NORMATIVA_DEPARTAMENTAL.md",
+      "nombre": "NORMATIVA_DEPARTAMENTAL.md",
+      "tamano_kb": 0.19,
+      "lineas": 4,
+      "clasificacion": "util_vigente"
+    }
+  ],
+  "archivos_por_carpeta": {
+    "./SOBERANO_02_CORE": [
+      "NORMATIVA_DEPARTAMENTAL.md"
+    ],
+    "./SOBERANO_01_MEMORIA": [
+      "NORMATIVA_DEPARTAMENTAL.md"
+    ],
+    "./SOBERANO_01_MEMORIA/RESCATE": [
+      "MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md"
+    ],
+    "./SOBERANO_01_MEMORIA/AUDITS": [
+      "VALIDACION_GOBIERNO_2026-07-22_23-32-09.md"
+    ],
+    "./SOBERANO_01_MEMORIA/ACTAS": [
+      "NEXUS-ACTA-20260724_185145.md",
+      "ACTAS_2026_07.md"
+    ],
+    "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS": [
+      "validar_gobierno_definitivo.sh",
+      "inspeccionar_gobierno.sh",
+      "cerrar_gobierno_v8.2_definitivo.sh",
+      "validar_constitucion_guardada.sh",
+      "ver_constitucion_linea_a_linea.sh"
+    ],
+    "./SOBERANO_00_GOBIERNO": [
+      "CONSTITUCION.md",
+      "NORMAS.md",
+      "NEXUS_MANIFEST.json",
+      "NORMATIVA_DEPARTAMENTAL.md",
+      "REGLAMENTO_EAD.md"
+    ],
+    "./SOBERANO_00_GOBIERNO/DOCS/seguridad": [
+      "protocolo.md"
+    ],
+    "./SOBERANO_03_NEXUS": [
+      "NORMATIVA_DEPARTAMENTAL.md"
+    ]
+  },
+  "clasificacion": {
+    "util_vigente": [
+      "./SOBERANO_02_CORE/NORMATIVA_DEPARTAMENTAL.md",
+      "./SOBERANO_01_MEMORIA/NORMATIVA_DEPARTAMENTAL.md",
+      "./SOBERANO_01_MEMORIA/RESCATE/MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md",
+      "./SOBERANO_01_MEMORIA/AUDITS/VALIDACION_GOBIERNO_2026-07-22_23-32-09.md",
+      "./SOBERANO_01_MEMORIA/ACTAS/NEXUS-ACTA-20260724_185145.md",
+      "./SOBERANO_01_MEMORIA/ACTAS/ACTAS_2026_07.md",
+      "./SOBERANO_00_GOBIERNO/CONSTITUCION.md",
+      "./SOBERANO_00_GOBIERNO/NORMAS.md",
+      "./SOBERANO_00_GOBIERNO/NEXUS_MANIFEST.json",
+      "./SOBERANO_00_GOBIERNO/NORMATIVA_DEPARTAMENTAL.md",
+      "./SOBERANO_00_GOBIERNO/REGLAMENTO_EAD.md",
+      "./SOBERANO_00_GOBIERNO/DOCS/seguridad/protocolo.md",
+      "./SOBERANO_03_NEXUS/NORMATIVA_DEPARTAMENTAL.md"
+    ],
+    "duplicado": [],
+    "obsoleto": [],
+    "backup_manual": [],
+    "script_operativo": [
+      "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_gobierno_definitivo.sh",
+      "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/inspeccionar_gobierno.sh",
+      "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/cerrar_gobierno_v8.2_definitivo.sh",
+      "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_constitucion_guardada.sh",
+      "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/ver_constitucion_linea_a_linea.sh"
+    ]
+  },
+  "metadata_extraida": [
+    {
+      "ruta": "./SOBERANO_02_CORE/NORMATIVA_DEPARTAMENTAL.md",
+      "titulo": "📜 NORMATIVA DEPARTAMENTAL: SOBERANO_02_CORE",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/NORMATIVA_DEPARTAMENTAL.md",
+      "titulo": "📜 NORMATIVA DEPARTAMENTAL: SOBERANO_01_MEMORIA",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/RESCATE/MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md",
+      "titulo": "📜 MANIFIESTO DE TRASVASE POR EVIDENCIA DIRECTA",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/AUDITS/VALIDACION_GOBIERNO_2026-07-22_23-32-09.md",
+      "titulo": "📜 REPORTE DE VALIDACIÓN: SOBERANO_00_GOBIERNO",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/ACTAS/NEXUS-ACTA-20260724_185145.md",
+      "titulo": "📜 ACTA DE PROMULGACIÓN DE LA CONSTITUCIÓN MAGNA v7.1",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/ACTAS/ACTAS_2026_07.md",
+      "titulo": "📜 ACTA DE CONGELACIÓN Y WHITELIST - 2026-07-24 22:16:39",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Acta"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_gobierno_definitivo.sh",
+      "titulo": "!/data/data/com.termux/files/usr/bin/bash",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/inspeccionar_gobierno.sh",
+      "titulo": "!/data/data/com.termux/files/usr/bin/bash",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/cerrar_gobierno_v8.2_definitivo.sh",
+      "titulo": "!/data/data/com.termux/files/usr/bin/bash",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/validar_constitucion_guardada.sh",
+      "titulo": "",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Constitución"
+    },
+    {
+      "ruta": "./SOBERANO_01_MEMORIA/HISTORICO_SCRIPTS/ver_constitucion_linea_a_linea.sh",
+      "titulo": "!/data/data/com.termux/files/usr/bin/bash",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Constitución"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/CONSTITUCION.md",
+      "titulo": "🏛️ CONSTITUCIÓN MAGNA DEL PARLAMENTO NEXUS (v7.1)",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Constitución"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NORMAS.md",
+      "titulo": "",
+      "version": "",
+      "fecha": "",
+      "estado": "** VIGENTE",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NEXUS_MANIFEST.json",
+      "titulo": "",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/NORMATIVA_DEPARTAMENTAL.md",
+      "titulo": "📜 NORMATIVA DEPARTAMENTAL: SOBERANO_00_GOBIERNO",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/REGLAMENTO_EAD.md",
+      "titulo": "📜 REGLAMENTO EAD: ESTÁNDAR Y WRAPPER UNIVERSAL",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_00_GOBIERNO/DOCS/seguridad/protocolo.md",
+      "titulo": "PROTOCOLO DE SEGURIDAD",
+      "version": "** 2026-07-02",
+      "fecha": "** 2026-07-02",
+      "estado": "",
+      "tipo": "Otro"
+    },
+    {
+      "ruta": "./SOBERANO_03_NEXUS/NORMATIVA_DEPARTAMENTAL.md",
+      "titulo": "📜 NORMATIVA DEPARTAMENTAL: SOBERANO_03_NEXUS",
+      "version": "",
+      "fecha": "",
+      "estado": "",
+      "tipo": "Otro"
+    }
+  ]
+}

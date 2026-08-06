@@ -1,500 +1,500 @@
-    return {"status": "healthy"}
-
-@app.get("/debug-env")
-async def debug_env():
-    # Muestra el estado real de las variables de entorno en el servidor
-    token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.getenv("DIRECTOR_CHAT_ID", "NO_CONFIGURADO")
-    
-    return {
-        "sistema": "Maestro-Nexus v7.1",
-        "auditoria_variables_en_vivo": {
-            "TELEGRAM_BOT_TOKEN_existe": bool(token),
-            "TELEGRAM_BOT_TOKEN_longitud": len(token),
-            "TELEGRAM_BOT_TOKEN_inicio": token[:5] + "..." if token else "VACIO",
-            "DIRECTOR_CHAT_ID_valor": chat_id,
-            "ALPACA_API_KEY_existe": bool(os.getenv("ALPACA_API_KEY")),
-            "UPSTASH_REDIS_existe": bool(os.getenv("UPSTASH_REDIS_REST_URL")),
-            "PUERTO_ACTUAL": os.getenv("PORT", "8080")
-        },
-        "instruccion": "Si 'DIRECTOR_CHAT_ID_valor' es 'NO_CONFIGURADO' o un numero que no es el suyo, ese es el problema."
-    }
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
-"""
-
-with open("SOBERANO_03_NEXUS/index.py", "w", encoding="utf-8") as f:
-    f.write(index_code)
-print("   ✅ Endpoint /debug-env inyectado exitosamente.")
-
-# 2. VERIFICAR INTEGRIDAD LOCAL DE ARCHIVOS CLAVE
-print("\n📝 2. Verificando integridad de archivos locales...")
-archivos_a_verificar = [
-    "SOBERANO_03_NEXUS/index.py",
-    "SOBERANO_03_NEXUS/telegram/webhook.py",
-    "SOBERANO_03_NEXUS/telegram/utils.py",
-    "Dockerfile"
-]
-for archivo in archivos_a_verificar:
-    if os.path.exists(archivo):
-        print(f"   ✅ {archivo} existe")
-    else:
-        print(f"   ❌ {archivo} FALTANTE")
-
-# 3. COMMIT Y PUSH A GITHUB
-print("\n📤 3. Enviando auditoría a GitHub para despliegue en Railway...")
-subprocess.run(['git', 'add', 'SOBERANO_03_NEXUS/index.py'], capture_output=True)
-subprocess.run(['git', 'commit', '-m', '[AUDIT] Agregado endpoint /debug-env para verificacion en vivo de variables'], capture_output=True)
-push_result = subprocess.run(['git', 'push', 'origin', 'soberano-v1'], capture_output=True, text=True)
-
-if push_result.returncode == 0:
-    print("   ✅ Desplegado a GitHub exitosamente. Railway comenzará a construir.")
-else:
-    print(f"   ⚠️ Advertencia: {push_result.stderr}")
-
-print("\n" + "=" * 90)
-print("✅ AUDITORÍA PREPARADA. Espere a que Railway muestre 'Active' (verde).")
-print("Luego visite: https://maestrotrading-production-c2db.up.railway.app/debug-env")
-print("=" * 90)
-EOF
-
-python3 << 'EOF'
-import subprocess
-
-print("=" * 60)
-print("VERIFICACION ATOMICA LOCAL")
-print("=" * 60)
-
-# 1. Rama actual
-rama = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
-print(f"1. Rama actual: {rama}")
-if rama != "soberano-v1":
-    print("   ERROR: Cambie a la rama correcta con: git checkout soberano-v1")
-else:
-    print("   OK: Rama correcta.")
-
-# 2. Estado limpio
-status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout.strip()
-if status:
-    print("   ADVERTENCIA: Hay cambios sin guardar. Ejecute: git add . && git commit -m 'fix'")
-else:
-    print("   OK: Repositorio limpio.")
-
-# 3. Forzar sincronizacion
-print("\nSincronizando con GitHub...")
-subprocess.run(["git", "fetch", "origin"], capture_output=True)
-subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True)
-print("   OK: Push a soberano-v1 completado.")
-print("=" * 60)
-EOF
-
-python3 << 'EOF'
-import os
-import subprocess
-import datetime
-
-print("=" * 80)
-print("🚀 SCRIPT MAESTRO DE RESOLUCIÓN NUCLEAR")
-print("=" * 80)
-
-# 1. Forzar rama correcta
-print("\n[1/5] Alineando rama a soberano-v1...")
-subprocess.run(["git", "checkout", "-B", "soberano-v1"], capture_output=True)
-print("   ✅ Rama 'soberano-v1' activa y actualizada.")
-
-# 2. Romper caché de Docker de Railway (Truco infalible)
-print("\n[2/5] Rompiendo caché de Docker en Railway...")
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-with open("Dockerfile", "a") as f:
-    f.write(f"\n# FORCE REBUILD TIMESTAMP: {timestamp}\n")
-print("   ✅ Dockerfile modificado. Railway se verá obligado a reconstruir desde cero.")
-
-# 3. Verificar endpoint de auditoría
-print("\n[3/5] Verificando integridad del código...")
-if os.path.exists("SOBERANO_03_NEXUS/index.py"):
-    with open("SOBERANO_03_NEXUS/index.py", "r", encoding="utf-8") as f:
-        if "/debug-env" in f.read():
-            print("   ✅ Endpoint /debug-env presente y listo.")
-        else:
-            print("   ⚠️ Advertencia: /debug-env no encontrado.")
-else:
-    print("   ❌ Error crítico: index.py no encontrado.")
-
-# 4. Commit y Push forzado
-print("\n[4/5] Enviando cambios al repositorio remoto (GitHub)...")
-subprocess.run(["git", "add", "Dockerfile", "SOBERANO_03_NEXUS/index.py"], capture_output=True)
-subprocess.run(["git", "commit", "-m", f"[NUCLEAR] Force rebuild {timestamp}"], capture_output=True)
-push_result = subprocess.run(["git", "push", "origin", "soberano-v1", "--force"], capture_output=True, text=True)
-
-if push_result.returncode == 0:
-    print("   ✅ Push forzado a 'soberano-v1' completado con éxito.")
-else:
-    print(f"   ❌ Error en push: {push_result.stderr}")
-
-# 5. Generar plantilla de variables para facilitar la copia
-print("\n[5/5] Generando plantilla de variables para Railway...")
-vars_template = """TELEGRAM_BOT_TOKEN=PEGUE_AQUI_SU_TOKEN_REAL
-DIRECTOR_CHAT_ID=PEGUE_AQUI_SU_ID_NUMERICO_REAL
-ALPACA_API_KEY=PEGUE_AQUI_SU_API_KEY_REAL
-ALPACA_SECRET_KEY=PEGUE_AQUI_SU_SECRET_KEY_REAL
-ALPACA_PAPER=true
-UPSTASH_REDIS_REST_URL=PEGUE_AQUI_SU_URL_REAL
-UPSTASH_REDIS_REST_TOKEN=PEGUE_AQUI_SU_TOKEN_REAL
-"""
-with open("VARIABLES_PARA_RAILWAY.txt", "w", encoding="utf-8") as f:
-    f.write(vars_template)
-print("   ✅ Archivo 'VARIABLES_PARA_RAILWAY.txt' creado en su carpeta.")
-
-print("\n" + "=" * 80)
-print("✅ FASE AUTOMÁTICA COMPLETADA AL 100%.")
-print("=" * 80)
-print("\n⚠️ AHORA, SOLO NECESITA HACER ESTOS 2 CLICS EN SU NAVEGADOR (RAILWAY):")
-print("1. Vaya a Settings > Source y cambie la 'Branch' a: soberano-v1")
-print("2. Vaya a Variables > Service y asegúrese de que las 7 variables estén allí (use el archivo .txt que acabo de crear).")
-print("3. Vaya a Deployments y haga clic en 'Redeploy' (o borre el servicio y créelo de nuevo desde GitHub).")
-print("\n🔍 Luego, visite en modo incógnito:")
-print("https://maestrotrading-production-c2db.up.railway.app/debug-env")
-print("=" * 80)
-EOF
-
-python3 << 'EOF'
-import urllib.request
-import json
-
-url = "https://maestrotrading-production-c2db.up.railway.app/debug-env"
-print(f"Consultando: {url}\n")
-
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        data = json.loads(response.read().decode())
-        print("✅ ¡ÉXITO! EL SERVIDOR RESPONDIÓ:")
-        print(json.dumps(data, indent=2))
-        
-        if data.get("auditoria_variables_en_vivo", {}).get("TELEGRAM_BOT_TOKEN_existe"):
-            print("\n🎉 LAS VARIABLES ESTÁN CARGADAS CORRECTAMENTE.")
-            print("   Vaya a Telegram y envíe el comando: /estado")
-        else:
-            print("\n⚠️ El servidor responde, pero las variables siguen faltando.")
-            print("   Revise la pestaña 'Variables > Service' en Railway.")
-except urllib.error.HTTPError as e:
-    if e.code == 404:
-        print("❌ FALLO: Sigue diciendo 'Not Found' (404).")
-        print("   Esto significa que Railway NO está leyendo la rama 'soberano-v1'.")
-        print("   Solución: En Railway, vaya a Settings > Danger > Remove Service, y vuelva a crearlo seleccionando la rama 'soberano-v1'.")
-    else:
-        print(f"❌ Error HTTP: {e.code}")
-except Exception as e:
-    print(f"❌ Error de conexión: {e}")
-EOF
-
-python3 << 'EOF'
-import os
-import re
-
-print("=" * 80)
-print("🔐 SCRIPT DE EXTRACCIÓN SEGURA DE VARIABLES PARA RAILWAY")
-print("=" * 80)
-
-# Lista de variables críticas que necesitamos
-vars_requeridas = [
-    "TELEGRAM_BOT_TOKEN",
-    "DIRECTOR_CHAT_ID",
-    "ALPACA_API_KEY",
-    "ALPACA_SECRET_KEY",
-    "ALPACA_PAPER",
-    "UPSTASH_REDIS_REST_URL",
-    "UPSTASH_REDIS_REST_TOKEN"
-]
-
-variables_encontradas = {}
-
-# 1. Intentar leer del entorno local (si las exportó en Termux)
-for var in vars_requeridas:
-    valor = os.getenv(var)
-    if valor:
-        variables_encontradas[var] = valor
-
-# 2. Si no están en el entorno, intentar leer del archivo de respaldo que creamos antes
-if len(variables_encontradas) < 7 and os.path.exists("VARIABLES_PARA_RAILWAY.txt"):
-    with open("VARIABLES_PARA_RAILWAY.txt", "r", encoding="utf-8") as f:
-        for line in f:
-            if "=" in line and not line.strip().startswith("#"):
-                key, val = line.strip().split("=", 1)
-                if key in vars_requeridas and val != "PEGUE_AQUI_SU_TOKEN_REAL":
-                    variables_encontradas[key] = val
-
-# 3. Intentar leer un archivo .env local si existe
-if len(variables_encontradas) < 7 and os.path.exists(".env"):
-    with open(".env", "r", encoding="utf-8") as f:
-        for line in f:
-            if "=" in line and not line.strip().startswith("#"):
-                key, val = line.strip().split("=", 1)
-                if key in vars_requeridas:
-                    variables_encontradas[key] = val
-
-print("\n📊 ESTADO DE DETECCIÓN:")
-for var in vars_requeridas:
-    if var in variables_encontradas:
-        valor = variables_encontradas[var]
-        # ENMASCARAMIENTO DE SEGURIDAD: Solo mostramos los primeros 4 y últimos 4 caracteres
-        if len(valor) > 8:
-            valor_mostrado = valor[:4] + "********" + valor[-4:]
-        else:
-            valor_mostrado = "****"
-        print(f"   ✅ {var}: {valor_mostrado}")
-    else:
-        print(f"   ❌ {var}: NO ENCONTRADA (Debe ingresarla manualmente)")
-
-# 4. Generar el archivo final limpio para Railway
-print("\n📝 Generando archivo limpio para copiar a Railway...")
-with open("COPIAR_EN_RAILWAY_RAW.txt", "w", encoding="utf-8") as f:
-    for var in vars_requeridas:
-        valor = variables_encontradas.get(var, "REEMPLAZAR_MANUALMENTE")
-        f.write(f"{var}={valor}\n")
-
-print("   ✅ Archivo 'COPIAR_EN_RAILWAY_RAW.txt' generado exitosamente.")
-print("=" * 80)
-print("🛡️ INSTRUCCIÓN DE SEGURIDAD:")
-print("1. NO tome captura de pantalla a la terminal.")
-print("2. Abra el archivo 'COPIAR_EN_RAILWAY_RAW.txt' con un editor de texto.")
-print("3. Si alguna dice 'REEMPLAZAR_MANUALMENTE', edítela con el valor real de Vercel/GitHub.")
-print("4. Copie TODO el contenido de ese archivo y péguelo en el 'Raw Editor' de Railway.")
-print("=" * 80)
-EOF
-
-python3 << 'EOF'
-import os
-import json
-
-print("=" * 80)
-print("🔧 SCRIPT DE SINCRONIZACIÓN DE VARIABLES SHARED → SERVICE")
-print("=" * 80)
-
-# Lista de variables que necesitamos sincronizar
-vars_a_sincronizar = [
-    "TELEGRAM_BOT_TOKEN",
-    "DIRECTOR_CHAT_ID",
-    "ALPACA_API_KEY",
-    "ALPACA_SECRET_KEY",
-    "ALPACA_PAPER",
-    "UPSTASH_REDIS_REST_URL",
-    "UPSTASH_REDIS_REST_TOKEN"
-]
-
-print("\n📋 VARIABLES QUE DEBE COMPARTIR AL SERVICIO:")
-for var in vars_a_sincronizar:
-    print(f"   • {var}")
-
-print("\n" + "=" * 80)
-print("📝 INSTRUCCIONES PARA COMPARTIR LAS VARIABLES (30 SEGUNDOS):")
-print("=" * 80)
-print("\n1. Vaya a Railway → Su Proyecto → Pestaña 'Shared Variables'")
-print("2. Para CADA variable de la lista anterior:")
-print("   a. Haga clic en el botón 'SHARE' a la derecha de la variable")
-print("   b. Seleccione el servicio 'maestrotrading'")
-print("   c. Haga clic en 'Save' o 'Confirm'")
-print("3. Repita para las 7 variables")
-print("4. Railway reiniciará el servicio automáticamente")
-
-print("\n" + "=" * 80)
-print("🔍 VERIFICACIÓN AUTOMÁTICA DESPUÉS DE COMPARTIR:")
-print("=" * 80)
-print("\nDespués de compartir las variables, ejecute este script para verificar:")
-print()
-print("python3 << 'EOF2'")
-print("import urllib.request, json")
-print("url = 'https://maestrotrading-production-c2db.up.railway.app/debug-env'")
-print("try:")
-print("    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})")
-print("    with urllib.request.urlopen(req) as response:")
-print("        data = json.loads(response.read().decode())")
-print("        vars_info = data.get('auditoria_variables_en_vivo', {})")
-print("        print('\\n📊 ESTADO DE VARIABLES:')")
-print("        print(f\"   TELEGRAM_BOT_TOKEN: {'✅' if vars_info.get('TELEGRAM_BOT_TOKEN_existe') else '❌'}\")")
-print("        print(f\"   DIRECTOR_CHAT_ID: {vars_info.get('DIRECTOR_CHAT_ID_valor')}\")")
-print("        print(f\"   ALPACA_API_KEY: {'✅' if vars_info.get('ALPACA_API_KEY_existe') else '❌'}\")")
-print("        if vars_info.get('TELEGRAM_BOT_TOKEN_existe'):")
-print("            print('\\n🎉 ¡ÉXITO! Vaya a Telegram y envíe: /estado')")
-print("except Exception as e:")
-print("    print(f'❌ Error: {e}')")
-print("EOF2")
-
-print("\n" + "=" * 80)
-print("💡 ALTERNATIVA MÁS RÁPIDA (SI NO QUIERE HACER CLIC 7 VECES):")
-print("=" * 80)
-print("\nSi prefiere no hacer clic en 'SHARE' 7 veces, puede:")
-print("1. Ir a Variables del servicio 'maestrotrading'")
-print("2. Hacer clic en 'Raw Editor'")
-print("3. Copiar y pegar este bloque (reemplazando los valores):")
-print()
-print("TELEGRAM_BOT_TOKEN=${{shared.TELEGRAM_BOT_TOKEN}}")
-print("DIRECTOR_CHAT_ID=${{shared.DIRECTOR_CHAT_ID}}")
-print("ALPACA_API_KEY=${{shared.ALPACA_API_KEY}}")
-print("ALPACA_SECRET_KEY=${{shared.ALPACA_SECRET_KEY}}")
-print("ALPACA_PAPER=${{shared.ALPACA_PAPER}}")
-print("UPSTASH_REDIS_REST_URL=${{shared.UPSTASH_REDIS_REST_URL}}")
-print("UPSTASH_REDIS_REST_TOKEN=${{shared.UPSTASH_REDIS_REST_TOKEN}}")
-print()
-print("4. Hacer clic en 'Update Variables'")
-print("5. Railway sincronizará automáticamente las Shared Variables al servicio")
-
-print("\n" + "=" * 80)
-EOF
-
-python3 << 'EOF'
-import urllib.request, json
-url = 'https://maestrotrading-production-c2db.up.railway.app/debug-env'
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        data = json.loads(response.read().decode())
-        vars_info = data.get('auditoria_variables_en_vivo', {})
-        print('\n📊 ESTADO DE VARIABLES:')
-        print(f"   TELEGRAM_BOT_TOKEN: {'✅' if vars_info.get('TELEGRAM_BOT_TOKEN_existe') else '❌'}")
-        print(f"   DIRECTOR_CHAT_ID: {vars_info.get('DIRECTOR_CHAT_ID_valor')}")
-        print(f"   ALPACA_API_KEY: {'✅' if vars_info.get('ALPACA_API_KEY_existe') else '❌'}")
-        if vars_info.get('TELEGRAM_BOT_TOKEN_existe'):
-            print('\n🎉 ¡ÉXITO! Vaya a Telegram y envíe: /estado')
-except Exception as e:
-    print(f'❌ Error: {e}')
-EOF
-
-python3 << 'EOF'
-import urllib.request, json
-url = 'https://maestrotrading-production-c2db.up.railway.app/debug-env'
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        data = json.loads(response.read().decode())
-        vars_info = data.get('auditoria_variables_en_vivo', {})
-        print('\n📊 ESTADO DE VARIABLES:')
-        print(f"   TELEGRAM_BOT_TOKEN: {'✅' if vars_info.get('TELEGRAM_BOT_TOKEN_existe') else '❌'}")
-        print(f"   DIRECTOR_CHAT_ID: {vars_info.get('DIRECTOR_CHAT_ID_valor')}")
-        print(f"   ALPACA_API_KEY: {'✅' if vars_info.get('ALPACA_API_KEY_existe') else '❌'}")
-        if vars_info.get('TELEGRAM_BOT_TOKEN_existe'):
-            print('\n🎉 ¡ÉXITO! Vaya a Telegram y envíe: /estado')
-except Exception as e:
-    print(f'❌ Error: {e}')
-EOF
-
-python3 << 'EOF'
-print("=" * 60)
-print("🔍 PRUEBA DE CONEXIÓN DIRECTA A ALPACA")
-print("=" * 60)
-
-api_key = input("1. Pegue su ALPACA_API_KEY: ").strip()
-secret_key = input("2. Pegue su ALPACA_SECRET_KEY: ").strip()
-is_paper = input("3. ¿Es cuenta Paper? (s/n): ").strip().lower() == 's'
-
-print("\n⏳ Conectando con Alpaca...")
-
-try:
-    from alpaca.trading.client import TradingClient
-    client = TradingClient(api_key=api_key, secret_key=secret_key, paper=is_paper)
-    
-    account = client.get_account()
-    print("\n✅ ¡CONEXIÓN EXITOSA!")
-    print(f"   Estado de la cuenta: {account.status}")
-    print(f"   Capital disponible (Buying Power): ${float(account.buying_power):.2f}")
-    print(f"   Entorno: {'PAPER TRADING' if is_paper else 'LIVE'}")
-    print("\n🎉 Las claves son correctas. El problema era un espacio en blanco o una clave antigua en Railway.")
-    
-except Exception as e:
-    print("\n❌ CONEXIÓN FALLIDA")
-    print(f"   Error de Alpaca: {e}")
-    print("\n💡 SOLUCIÓN: Sus claves son incorrectas o no coinciden con el entorno Paper/Live.")
-    print("   Vaya a app.alpaca.markets y regenere las API Keys.")
-
-print("=" * 60)
-EOF
-
-python3 << 'EOF'
-import os
-import subprocess
-
-print("=" * 80)
-print("🔍 INYECTANDO DIAGNÓSTICO DE ALPACA EN VIVO (DESDE RAILWAY)")
-print("=" * 80)
-
-# Leer el index.py actual
-index_path = "SOBERANO_03_NEXUS/index.py"
-with open(index_path, "r", encoding="utf-8") as f:
-    content = f.read()
-
-# Código del nuevo endpoint de diagnóstico de Alpaca
-alpaca_debug_code = """
-@app.get("/debug-alpaca")
-async def debug_alpaca():
-    # Diagnóstico en vivo de la conexión a Alpaca DESDE el servidor de Railway
-    api_key = os.getenv("ALPACA_API_KEY", "").strip()
-    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
-    is_paper = os.getenv("ALPACA_PAPER", "false").lower() == "true"
-    
-    resultado = {
-        "servidor": "Railway (En vivo)",
-        "variables_leidas": {
-            "ALPACA_API_KEY_longitud": len(api_key),
-            "ALPACA_API_KEY_primeros_4": api_key[:4] + "..." if api_key else "VACIO",
-            "ALPACA_SECRET_KEY_longitud": len(secret_key),
-            "ALPACA_PAPER_valor": is_paper
-        },
-        "intento_de_conexion": "Pendiente..."
-    }
-    
-    if not api_key or not secret_key:
-        resultado["intento_de_conexion"] = "FALLIDO: Las claves están vacías en Railway."
-        return resultado
-        
-    try:
-        from alpaca.trading.client import TradingClient
-        client = TradingClient(api_key=api_key, secret_key=secret_key, paper=is_paper)
-        account = client.get_account()
-        
-        resultado["intento_de_conexion"] = "✅ EXITOSA"
-        resultado["detalles_cuenta"] = {
-            "status": account.status,
-            "buying_power": float(account.buying_power),
-            "equity": float(account.equity)
-        }
-    except Exception as e:
-        resultado["intento_de_conexion"] = "❌ FALLIDO"
-        resultado["error_exacto_de_alpaca"] = str(e)
-        
     return resultado
 """
 
-# Insertar el nuevo endpoint antes del bloque `if __name__ == "__main__":`
-if "/debug-alpaca" not in content:
+# Reemplazar el endpoint anterior si existe, o agregarlo
+if "@app.get(\"/debug-alpaca\")" in content:
+    # Buscar y reemplazar todo el bloque anterior del endpoint
+    import re
+    content = re.sub(
+        r'@app\.get\("/debug-alpaca"\).*?(?=\n@app\.get|\nif __name__ == "__main__":)',
+        nuevo_debug,
+        content,
+        flags=re.DOTALL
+    )
+else:
     content = content.replace(
         'if __name__ == "__main__":',
-        alpaca_debug_code + '\nif __name__ == "__main__":'
+        nuevo_debug + '\nif __name__ == "__main__":'
     )
-    
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    print("✅ Endpoint /debug-alpaca inyectado exitosamente.")
-else:
-    print("ℹ️ El endpoint /debug-alpaca ya existe.")
 
-# Commit y Push
-print("\n📤 Enviando a GitHub para despliegue en Railway...")
+with open(index_path, "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("✅ Endpoint /debug-alpaca actualizado con prueba HTTP directa.")
+
+print("\n📤 Enviando a GitHub...")
 subprocess.run(["git", "add", index_path], capture_output=True)
-subprocess.run(["git", "commit", "-m", "[AUDIT] Agregado endpoint /debug-alpaca para validar conexión en vivo"], capture_output=True)
+subprocess.run(["git", "commit", "-m", "[AUDIT] Prueba HTTP directa desde Railway sin librerías"], capture_output=True)
 push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
 
 if push_result.returncode == 0:
-    print("✅ Desplegado a GitHub. Railway comenzará a construir.")
+    print("✅ Desplegado. Railway reconstruirá automáticamente.")
 else:
     print(f"⚠️ Advertencia: {push_result.stderr}")
 
 print("\n" + "=" * 80)
-print("⏳ ESPERE 2 MINUTOS A QUE RAILWAY TERMINE DE CONSTRUIR (Estado: Active)")
-print("LUEGO, VISITE EN SU NAVEGADOR:")
-print("https://maestrotrading-production-c2db.up.railway.app/debug-alpaca")
+print("⏳ ESPERE 2 MINUTOS A QUE RAILWAY ESTÉ EN VERDE (Active)")
+print("LUEGO VISITE: https://maestrotrading-production-c2db.up.railway.app/debug-alpaca")
+print("=" * 80)
+EOF
+
+python3 << 'EOF'
+import os
+import subprocess
+
+print("=" * 80)
+print("🔍 INYECTANDO ENDPOINT DE DIAGNÓSTICO DUAL (PAPER + LIVE)")
+print("=" * 80)
+
+index_path = "SOBERANO_03_NEXUS/index.py"
+with open(index_path, "r", encoding="utf-8") as f:
+    content = f.read()
+
+# Nuevo endpoint que prueba AMBOS endpoints
+dual_debug = """
+@app.get("/debug-alpaca-dual")
+async def debug_alpaca_dual():
+    import httpx
+    
+    api_key = os.getenv("ALPACA_API_KEY", "").strip()
+    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
+    
+    resultado = {
+        "servidor": "Railway (En vivo)",
+        "variables_saneadas": {
+            "API_KEY_longitud": len(api_key),
+            "API_KEY_repr": repr(api_key[:10]) + "..." if api_key else "VACIO",
+            "SECRET_KEY_longitud": len(secret_key),
+        },
+        "prueba_paper": "Pendiente...",
+        "prueba_live": "Pendiente...",
+        "diagnostico_final": "Pendiente..."
+    }
+    
+    if not api_key or not secret_key:
+        resultado["diagnostico_final"] = "FALLIDO: Variables vacías"
+        return resultado
+    
+    headers = {
+        "APCA-API-KEY-ID": api_key,
+        "APCA-API-SECRET-KEY": secret_key
+    }
+    
+    # Probar Paper Trading
+    try:
+        async with httpx.AsyncClient() as client:
+            resp_paper = await client.get("https://paper-api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
+            resultado["prueba_paper"] = {
+                "status_code": resp_paper.status_code,
+                "respuesta": resp_paper.text[:200]
+            }
+    except Exception as e:
+        resultado["prueba_paper"] = f"ERROR: {str(e)}"
+    
+    # Probar Live Trading
+    try:
+        async with httpx.AsyncClient() as client:
+            resp_live = await client.get("https://api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
+            resultado["prueba_live"] = {
+                "status_code": resp_live.status_code,
+                "respuesta": resp_live.text[:200]
+            }
+    except Exception as e:
+        resultado["prueba_live"] = f"ERROR: {str(e)}"
+    
+    # Diagnóstico final
+    paper_ok = isinstance(resultado["prueba_paper"], dict) and resultado["prueba_paper"].get("status_code") == 200
+    live_ok = isinstance(resultado["prueba_live"], dict) and resultado["prueba_live"].get("status_code") == 200
+    
+    if paper_ok and not live_ok:
+        resultado["diagnostico_final"] = "✅ CLAVES DE PAPER TRADING - Use endpoint paper-api"
+    elif live_ok and not paper_ok:
+        resultado["diagnostico_final"] = "⚠️ CLAVES DE LIVE TRADING - Las claves son de cuenta real, no paper"
+    elif paper_ok and live_ok:
+        resultado["diagnostico_final"] = "❌ ANOMALÍA: Ambas cuentas aceptan las claves"
+    else:
+        resultado["diagnostico_final"] = "❌ CLAVES INVÁLIDAS: Ninguna cuenta acepta estas credenciales"
+    
+    return resultado
+"""
+
+# Insertar o reemplazar el endpoint
+if "@app.get(\"/debug-alpaca-dual\")" in content:
+    import re
+    content = re.sub(
+        r'@app\.get\("/debug-alpaca-dual"\).*?(?=\n@app\.get|\nif __name__ == "__main__":)',
+        dual_debug,
+        content,
+        flags=re.DOTALL
+    )
+else:
+    content = content.replace(
+        'if __name__ == "__main__":',
+        dual_debug + '\nif __name__ == "__main__":'
+    )
+
+with open(index_path, "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("✅ Endpoint /debug-alpaca-dual inyectado.")
+
+print("\n📤 Enviando a GitHub...")
+subprocess.run(["git", "add", index_path], capture_output=True)
+subprocess.run(["git", "commit", "-m", "[AUDIT] Endpoint dual para determinar tipo de clave (paper vs live)"], capture_output=True)
+push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
+
+if push_result.returncode == 0:
+    print("✅ Desplegado. Railway reconstruirá automáticamente.")
+else:
+    print(f"⚠️ Advertencia: {push_result.stderr}")
+
+print("\n" + "=" * 80)
+print("⏳ ESPERE 2 MINUTOS A QUE RAILWAY ESTÉ EN VERDE (Active)")
+print("LUEGO VISITE: https://maestrotrading-production-c2db.up.railway.app/debug-alpaca-dual")
+print("=" * 80)
+EOF
+
+python3 << 'EOF'
+import os
+import subprocess
+
+print("=" * 80)
+print("🔧 APLICANDO SANEAMIENTO AUTOMÁTICO A CONFIG.PY")
+print("=" * 80)
+
+config_path = "SOBERANO_03_NEXUS/config.py"
+if os.path.exists(config_path):
+    with open(config_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    # Reemplazar las líneas de ALPACA_API_KEY y ALPACA_SECRET_KEY para agregar .strip()
+    content = content.replace(
+        'ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")',
+        'ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "").strip()'
+    )
+    content = content.replace(
+        'ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")',
+        'ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "").strip()'
+    )
+    
+    with open(config_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    
+    print("✅ config.py actualizado con .strip() automático.")
+else:
+    print("❌ config.py no encontrado.")
+
+print("\n📤 Enviando a GitHub...")
+subprocess.run(["git", "add", config_path], capture_output=True)
+subprocess.run(["git", "commit", "-m", "[FIX] Saneamiento automático de variables Alpaca con .strip()"], capture_output=True)
+push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
+
+if push_result.returncode == 0:
+    print("✅ Desplegado.")
+else:
+    print(f"⚠️ Advertencia: {push_result.stderr}")
+
+print("=" * 80)
+EOF
+
+python3 << 'EOF'
+import os
+import json
+from datetime import datetime
+from pathlib import Path
+
+print("=" * 80)
+print("🔍 AUDITORÍA CONSTITUCIONAL COMPLETA DEL SISTEMA")
+print("=" * 80)
+print(f"Fecha de auditoría: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print("=" * 80)
+
+# Configuración de búsqueda
+BUSQUEDAS = {
+    "nombres_archivo": [
+        "constitucion", "ley", "norma", "acta", "biblia", "manifiesto",
+        "manifest", "dossier", "gobernanza", "gobierno", "reglamento",
+        "protocolo", "directiva", "decreto", "orden", "resolucion"
+    ],
+    "palabras_clave_contenido": [
+        "artículo", "articulo", "ley", "norma", "constitución", "constitucion",
+        "gobernanza", "soberanía", "soberania", "directorial", "parlamento",
+        "nexus", "manifiesto", "acta de", "promulgación", "promulgacion"
+    ],
+    "extensiones": [".md", ".txt", ".json", ".yaml", ".yml", ".sh"]
+}
+
+# Resultados
+resultados = {
+    "archivos_encontrados": [],
+    "archivos_por_carpeta": {},
+    "clasificacion": {
+        "util_vigente": [],
+        "duplicado": [],
+        "obsoleto": [],
+        "backup_manual": [],
+        "script_operativo": []
+    },
+    "metadata_extraida": []
+}
+
+# Función para clasificar archivos
+def clasificar_archivo(ruta, nombre):
+    nombre_lower = nombre.lower()
+    
+    # Backup manual
+    if "backup" in ruta.lower() or "pre-enmienda" in nombre_lower:
+        return "backup_manual"
+    
+    # Script operativo
+    if nombre_lower.endswith(".sh") or "script" in ruta.lower():
+        return "script_operativo"
+    
+    # Obsoleto
+    if "legacy" in ruta.lower() or "pendiente" in nombre_lower:
+        return "obsoleto"
+    
+    # Constitución principal
+    if nombre_lower == "constitucion.md" and "00-gobierno" in ruta.lower():
+        return "util_vigente"
+    
+    # Leyes y normas en dossier (probablemente duplicadas)
+    if "dossier/constitucion" in ruta.lower():
+        return "duplicado"
+    
+    # Biblia (probablemente duplicada)
+    if "biblia" in nombre_lower:
+        return "duplicado"
+    
+    # Por defecto, útil
+    return "util_vigente"
+
+# Función para extraer metadata
+def extraer_metadata(ruta, contenido):
+    metadata = {
+        "ruta": ruta,
+        "titulo": "",
+        "version": "",
+        "fecha": "",
+        "estado": "",
+        "tipo": ""
+    }
+    
+    # Buscar título
+    for linea in contenido.split('\n')[:10]:
+        if linea.startswith('#'):
+            metadata["titulo"] = linea.replace('#', '').strip()
+            break
+    
+    # Buscar versión
+    if "versión:" in contenido.lower() or "version:" in contenido.lower():
+        for linea in contenido.split('\n')[:20]:
+            if "versión" in linea.lower() or "version" in linea.lower():
+                metadata["version"] = linea.split(':')[-1].strip()
+                break
+    
+    # Buscar fecha
+    if "fecha:" in contenido.lower():
+        for linea in contenido.split('\n')[:20]:
+            if "fecha" in linea.lower():
+                metadata["fecha"] = linea.split(':')[-1].strip()
+                break
+    
+    # Buscar estado
+    if "estado:" in contenido.lower():
+        for linea in contenido.split('\n')[:20]:
+            if "estado" in linea.lower():
+                metadata["estado"] = linea.split(':')[-1].strip()
+                break
+    
+    # Determinar tipo
+    nombre = os.path.basename(ruta).lower()
+    if "constitucion" in nombre:
+        metadata["tipo"] = "Constitución"
+    elif nombre.startswith("ley-"):
+        metadata["tipo"] = "Ley"
+    elif nombre.startswith("norma-"):
+        metadata["tipo"] = "Norma"
+    elif nombre.startswith("acta"):
+        metadata["tipo"] = "Acta"
+    elif "biblia" in nombre:
+        metadata["tipo"] = "Biblia (Documento Maestro)"
+    else:
+        metadata["tipo"] = "Otro"
+    
+    return metadata
+
+# Escaneo del repositorio
+print("\n📂 ESCANEANDO REPOSITORIO...")
+print("-" * 80)
+
+for root, dirs, files in os.walk('.'):
+    # Ignorar directorios de sistema
+    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.venv', 'node_modules']]
+    
+    for file in files:
+        ruta_completa = os.path.join(root, file)
+        nombre_lower = file.lower()
+        
+        # Verificar si el nombre coincide con búsquedas
+        coincide_nombre = any(busq in nombre_lower for busq in BUSQUEDAS["nombres_archivo"])
+        
+        # Verificar extensión
+        extension_ok = any(nombre_lower.endswith(ext) for ext in BUSQUEDAS["extensiones"])
+        
+        if coincide_nombre and extension_ok:
+            try:
+                with open(ruta_completa, 'r', encoding='utf-8') as f:
+                    contenido = f.read()
+                
+                # Verificar si el contenido tiene palabras clave
+                coincide_contenido = any(palabra in contenido.lower() for palabra in BUSQUEDAS["palabras_clave_contenido"])
+                
+                if coincide_contenido or coincide_nombre:
+                    # Clasificar
+                    clasificacion = clasificar_archivo(ruta_completa, file)
+                    
+                    # Extraer metadata
+                    metadata = extraer_metadata(ruta_completa, contenido)
+                    
+                    # Agregar a resultados
+                    resultados["archivos_encontrados"].append({
+                        "ruta": ruta_completa,
+                        "nombre": file,
+                        "tamano_kb": round(len(contenido) / 1024, 2),
+                        "lineas": len(contenido.split('\n')),
+                        "clasificacion": clasificacion
+                    })
+                    
+                    resultados["clasificacion"][clasificacion].append(ruta_completa)
+                    resultados["metadata_extraida"].append(metadata)
+                    
+                    # Contar por carpeta
+                    carpeta = os.path.dirname(ruta_completa)
+                    if carpeta not in resultados["archivos_por_carpeta"]:
+                        resultados["archivos_por_carpeta"][carpeta] = []
+                    resultados["archivos_por_carpeta"][carpeta].append(file)
+                    
+            except Exception as e:
+                print(f"   ⚠️ Error leyendo {ruta_completa}: {e}")
+
+# Generar reporte
+print("\n" + "=" * 80)
+print("📊 REPORTE DE AUDITORÍA CONSTITUCIONAL")
+print("=" * 80)
+
+print(f"\n📁 TOTAL DE ARCHIVOS ENCONTRADOS: {len(resultados['archivos_encontrados'])}")
+
+print("\n📂 DISTRIBUCIÓN POR CARPETA:")
+for carpeta, archivos in sorted(resultados["archivos_por_carpeta"].items()):
+    print(f"   {carpeta}: {len(archivos)} archivos")
+
+print("\n🏷️ CLASIFICACIÓN:")
+print(f"   ✅ Útil y Vigente: {len(resultados['clasificacion']['util_vigente'])} archivos")
+print(f"   ⚠️ Duplicado: {len(resultados['clasificacion']['duplicado'])} archivos")
+print(f"   ❌ Obsoleto: {len(resultados['clasificacion']['obsoleto'])} archivos")
+print(f"   💾 Backup Manual: {len(resultados['clasificacion']['backup_manual'])} archivos")
+print(f"   🔧 Script Operativo: {len(resultados['clasificacion']['script_operativo'])} archivos")
+
+print("\n📋 DETALLE DE ARCHIVOS ÚTILES Y VIGENTES:")
+for archivo in resultados["archivos_encontrados"]:
+    if archivo["clasificacion"] == "util_vigente":
+        print(f"   ✅ {archivo['ruta']} ({archivo['tamano_kb']} KB, {archivo['lineas']} líneas)")
+
+print("\n⚠️ DETALLE DE ARCHIVOS DUPLICADOS:")
+for archivo in resultados["archivos_encontrados"]:
+    if archivo["clasificacion"] == "duplicado":
+        print(f"   ⚠️ {archivo['ruta']} ({archivo['tamano_kb']} KB)")
+
+print("\n💾 DETALLE DE BACKUPS MANUALES:")
+for archivo in resultados["archivos_encontrados"]:
+    if archivo["clasificacion"] == "backup_manual":
+        print(f"   💾 {archivo['ruta']} ({archivo['tamano_kb']} KB)")
+
+print("\n📜 METADATA EXTRAÍDA (Primeros 10 archivos):")
+for meta in resultados["metadata_extraida"][:10]:
+    print(f"   📄 {meta['ruta']}")
+    print(f"      Tipo: {meta['tipo']}")
+    if meta['titulo']:
+        print(f"      Título: {meta['titulo']}")
+    if meta['version']:
+        print(f"      Versión: {meta['version']}")
+    if meta['fecha']:
+        print(f"      Fecha: {meta['fecha']}")
+    if meta['estado']:
+        print(f"      Estado: {meta['estado']}")
+    print()
+
+# Guardar reporte completo en JSON
+with open("auditoria_constitucional_completa.json", "w", encoding="utf-8") as f:
+    json.dump(resultados, f, indent=2, ensure_ascii=False)
+
+print("\n" + "=" * 80)
+print("✅ AUDITORÍA COMPLETADA")
+print(f"📄 Reporte completo guardado en: auditoria_constitucional_completa.json")
+print("=" * 80)
+EOF
+
+python3 << 'EOF'
+import subprocess
+import json
+
+print("=" * 80)
+print("🔍 VERIFICACIÓN DE ESTADO DE RAMAS")
+print("=" * 80)
+
+# 1. Ver rama actual local
+print("\n📍 RAMA ACTUAL EN TERMUX:")
+result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
+rama_actual = result.stdout.strip()
+print(f"   Rama activa: {rama_actual}")
+
+# 2. Ver todas las ramas locales
+print("\n📋 RAMAS LOCALES:")
+result = subprocess.run(["git", "branch"], capture_output=True, text=True)
+print(result.stdout)
+
+# 3. Ver ramas remotas
+print("\n🌐 RAMAS REMOTAS (GitHub):")
+result = subprocess.run(["git", "branch", "-r"], capture_output=True, text=True)
+print(result.stdout)
+
+# 4. Ver último commit de cada rama
+print("\n📊 ÚLTIMOS COMMITS:")
+result = subprocess.run(["git", "log", "--oneline", "--all", "--graph", "-10"], capture_output=True, text=True)
+print(result.stdout)
+
+# 5. Ver archivos en rama main (si existe)
+print("\n📁 ARCHIVOS EN RAMA MAIN (GitHub):")
+result = subprocess.run(["git", "ls-tree", "-r", "origin/main", "--name-only"], capture_output=True, text=True)
+if result.returncode == 0:
+    archivos_main = result.stdout.strip().split('\n')
+    print(f"   Total de archivos en main: {len(archivos_main)}")
+    
+    # Filtrar archivos relacionados con constitución
+    const_files = [f for f in archivos_main if any(palabra in f.lower() for palabra in ['constitucion', 'ley-', 'norma-', 'acta', 'biblia', 'manifest'])]
+    print(f"   Archivos de constitución/leyes en main: {len(const_files)}")
+    
+    print("\n   Primeros 20 archivos de constitución en main:")
+    for f in const_files[:20]:
+        print(f"      - {f}")
+else:
+    print("   ⚠️ No se pudo acceder a origin/main")
+
+# 6. Ver archivos en rama soberano-v1
+print("\n📁 ARCHIVOS EN RAMA SOBERANO-V1:")
+result = subprocess.run(["git", "ls-tree", "-r", "origin/soberano-v1", "--name-only"], capture_output=True, text=True)
+if result.returncode == 0:
+    archivos_soberano = result.stdout.strip().split('\n')
+    print(f"   Total de archivos en soberano-v1: {len(archivos_soberano)}")
+    
+    const_files_sv = [f for f in archivos_soberano if any(palabra in f.lower() for palabra in ['constitucion', 'ley-', 'norma-', 'acta', 'biblia', 'manifest'])]
+    print(f"   Archivos de constitución/leyes en soberano-v1: {len(const_files_sv)}")
+else:
+    print("   ⚠️ No se pudo acceder a origin/soberano-v1")
+
+print("\n" + "=" * 80)
+print("✅ VERIFICACIÓN COMPLETADA")
 print("=" * 80)
 EOF
 

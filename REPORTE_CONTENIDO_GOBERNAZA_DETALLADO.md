@@ -1,8 +1,13 @@
-# 🏛️ CONSTITUCIÓN DEL SISTEMA MAESTRO-NEXUS
-**Versión:** 5.0 (Unificada y Robusta) | **Fecha:** 2026-08-06 | **Estado:** Vigente
----
+# 📜 REPORTE DE CONTENIDO DETALLADO DE GOBERNANZA
+Fecha de generación: 2026-08-06 16:19:35
+Este documento contiene el contenido REAL de cada archivo de gobernanza en la rama soberano-v1.
+Revíselo para decidir qué se fusiona en la CONSTITUCION_V5.0.md.
+================================================================================
 
-## PREÁMBULO Y PRINCIPIOS FUNDAMENTALES
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/CONSTITUCION.md`
+**Tamaño:** 5.97 KB | **Líneas:** 62
+---
+```markdown
 ---
 id: NEXUS-CONST-v7.1-FINAL
 date: 2026-07-24
@@ -66,17 +71,12 @@ El Parlamento Nexus es un ecosistema autónomo de inteligencias artificiales y h
 * **Art. 13 (Procedimiento de Reforma Constitucional):** Esta Constitución solo podrá ser enmendada por propuesta formal del Director General o de la Mesa Técnica, previo debate en Alta Gerencia y ratificación explícita del Director General. Las reformas se registrarán secuencialmente en `SOBERANO_00_GOBIERNO/ENMIENDAS/`.
 * **Art. 14 (Principio de Resiliencia y Protección Patrimonial):** El sistema mantendrá mecanismos de contingencia (*fallback*) ante fallos de proveedores de IA y priorizará siempre la preservación del patrimonio sobre la ejecución de operaciones de riesgo no respaldadas.
 
----
-## CAPÍTULO FINAL: PROTOCOLO DE HIERRO (V5.0)
-**Artículo X.1 (Minimalismo Operativo):** El núcleo de ejecución del sistema (trading engine) tiene prohibido leer archivos de texto (.md, .txt) para tomar decisiones. Toda la configuración debe provenir de Variables de Entorno o de la base de datos de estado (Redis).
-**Artículo X.2 (Salvaguarda Automática / Hard-Fail):** Si al iniciar el sistema faltan variables críticas (ALPACA_API_KEY, TELEGRAM_BOT_TOKEN, UPSTASH_REDIS_REST_URL, etc.), el sistema se negará a arrancar. Es preferible un sistema apagado a uno operando a ciegas.
-**Artículo X.3 (Enfoque Absoluto en Rentabilidad):** La documentación y las normas existen para servir a la ejecución, no al revés. Cualquier archivo, script o proceso que no contribuya directamente a la obtención de datos, la gestión de riesgo o la ejecución de órdenes será considerado ruido y eliminado.
-**Artículo X.4 (Unicidad Documental):** Queda estrictamente prohibida la creación de múltiples archivos de 'Leyes', 'Normas' o 'Reglamentos' dispersos. Toda modificación a la gobernanza debe hacerse *in-place* en este único documento. Git es la única fuente de versiones anteriores.
+```
 
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/NORMAS.md`
+**Tamaño:** 3.42 KB | **Líneas:** 108
 ---
-## ANEXO A: NORMAS OPERATIVAS
-*Las siguientes normas son parte integral de esta Constitución.*
-
+```markdown
 ---
 id: NORMAS-SISTEMA-NEXUS
 date: 2026-07-27
@@ -186,9 +186,53 @@ Cada archivo debe apuntar a un documento de auditoria en SOBERANO_01_MEMORIA/AUD
 
 *Este documento es vinculante para todo el sistema Nexus.*
 
+```
+
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/NEXUS_MANIFEST.json`
+**Tamaño:** 0.95 KB | **Líneas:** 34
 ---
-## ANEXO B: REGLAMENTOS Y PROTOCOLOS DE SEGURIDAD
-### Reglamento EAD
+```markdown
+{
+  "project": "Nexus IA - Maestro Trading",
+  "version": "1.0.0",
+  "meta_state": "ACTIVE",
+  "governance": {
+    "director_id": "JEISSON_01",
+    "roles": {
+      "cto": "Gemini-1.5-Pro",
+      "sre": "Meta-Llama-3-SRE",
+      "moderator": "Copilot-ChatOps"
+    },
+    "parliament_rules": [
+      "PR_01: Prohibido modificar index.py o lock.py sin Ficha Tecnica firmada",
+      "PR_02: Toda decision de enrutamiento exige dictamen cruzado CTO+SRE",
+      "PR_03: Los tokens de bypass de Vercel quedan vetados en entornos transaccionales"
+    ]
+  },
+  "infrastructure_map": {
+    "production_domain": "maestro-trading.vercel.app",
+    "environment": "Vercel-Serverless-Python3.10",
+    "endpoints": {
+      "health_check": "/health",
+      "telegram_gateway": "/webhook"
+    }
+  },
+  "state_declarative": {
+    "telegram_group_id": "6444278889",
+    "feature_parliament": "1",
+    "risk_management": {
+      "max_vix": "20.0",
+      "risk_per_trade": "0.01"
+    }
+  }
+}
+
+```
+
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/REGLAMENTO_EAD.md`
+**Tamaño:** 1.4 KB | **Líneas:** 25
+---
+```markdown
 ---
 id: REGLAMENTO-EAD-001
 date: 2026-07-24
@@ -215,13 +259,23 @@ Todo script (.sh o .py) debe seguir la siguiente secuencia funcional:
 ## 3. PROSCRIPCIÓN DE CREDENCIALES
 Queda prohibida la inserción de claves API, tokens o contraseñas en texto plano. Todo acceso a secrets utilizará variables de entorno administradas por la Dirección SRE (Art. 12 de la Constitución Magna v7.1).
 
-### Normativa Departamental
+```
+
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/NORMATIVA_DEPARTAMENTAL.md`
+**Tamaño:** 0.35 KB | **Líneas:** 4
+---
+```markdown
 # 📜 NORMATIVA DEPARTAMENTAL: SOBERANO_00_GOBIERNO
 - **Límite de Archivos:** Máximo 7 archivos.
 - **Archivos Autorizados:** CONSTITUCION.md, NORMATIVA_DEPARTAMENTAL.md, REGLAMENTO_EAD.md, ROLES.md, NEXUS_MANIFEST.json, DOCS/seguridad/protocolo.md, nexus_cli.sh.
 - **Prohibición:** Prohibido crear scripts bash temporales o archivos fuera de la Whitelist.
 
-### Protocolo de Seguridad
+```
+
+## 📄 ARCHIVO: `SOBERANO_00_GOBIERNO/DOCS/seguridad/protocolo.md`
+**Tamaño:** 0.4 KB | **Líneas:** 18
+---
+```markdown
 # PROTOCOLO DE SEGURIDAD
 
 **Versión:** 1.0 | **Fecha:** 2026-07-02
@@ -241,10 +295,12 @@ Queda prohibida la inserción de claves API, tokens o contraseñas en texto plan
 | Vercel no despliega | GitHub Actions como respaldo |
 | Redis caído | Backup en GitHub |
 
----
-## ANEXO C: MANIFIESTOS Y RESCATE DE GOBERNANZA
-*Documento histórico de trasvase y evidencias directas.*
+```
 
+## 📄 ARCHIVO: `SOBERANO_01_MEMORIA/RESCATE/MANIFIESTO_TRASVASE_2026-07-22_23:15:03.md`
+**Tamaño:** 1.52 KB | **Líneas:** 23
+---
+```markdown
 ---
 id: TRASVASE-EVIDENCIA-2026-07-22_23:15:03
 date: 2026-07-22
@@ -269,7 +325,30 @@ Este documento certifica el trasvase físico de los archivos de la rama `main` a
 - **Origen:** `02-SISTEMA/API/api/core/scheduler.py` ➡️ **Destino:** `SOBERANO_02_CORE/core/scheduler.py`
 - **Origen:** `02-SISTEMA/API/api/core/generar_bitacora.py` ➡️ **Destino:** `SOBERANO_02_CORE/core/generar_bitacora.py`
 
+```
+
+## 📄 ARCHIVO: `SOBERANO_01_MEMORIA/AUDITS/VALIDACION_GOBIERNO_2026-07-22_23-32-09.md`
+**Tamaño:** 0.51 KB | **Líneas:** 18
 ---
-## HISTORIAL DE CAMBIOS
-- **V1.0 - V4.0:** Versiones anteriores (consultar historial de Git).
-- **V5.0 (2026-08-06):** Unificación total de todos los documentos de gobernanza dispersos en un solo archivo maestro. Inclusión del 'Protocolo de Hierro' para garantizar minimalismo, hard-fail y enfoque en rentabilidad.
+```markdown
+---
+id: VAL-GOB-2026-07-22_23-32-09
+date: 2026-07-22 23:32:09
+type: Validacion_Departamento
+status: APROBADO
+---
+# 📜 REPORTE DE VALIDACIÓN: SOBERANO_00_GOBIERNO
+
+- **Fecha de Inspección:** 2026-07-22 23:32:09
+- **Intérprete Python:** python3
+- **Advertencias / Errores:** 0
+- **Estado General:** PASS ✅
+
+## 📂 Inventario Inspeccionado
+- [x] `SOBERANO_00_GOBIERNO/constitucion.md`
+- [x] `SOBERANO_00_GOBIERNO/roles.md`
+- [x] `SOBERANO_00_GOBIERNO/DOCS/seguridad/protocolo.md`
+- [x] `SOBERANO_00_GOBIERNO/NEXUS_MANIFEST.json`
+
+```
+
