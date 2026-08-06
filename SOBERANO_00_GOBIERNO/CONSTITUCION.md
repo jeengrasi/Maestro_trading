@@ -1,21 +1,13 @@
 # 🏛️ CONSTITUCIÓN DEL SISTEMA MAESTRO-NEXUS
-**Versión:** 5.0 (Unificada y Robusta) | **Fecha:** 2026-08-06 | **Estado:** Vigente
+**Versión:** 5.0 (Definitiva y Blindada) | **Fecha:** 2026-08-06 | **Estado:** Vigente
 ---
 
 ## PREÁMBULO Y PRINCIPIOS FUNDAMENTALES
----
-id: NEXUS-CONST-v7.1-FINAL
-date: 2026-07-24
-status: VIGENTE
-authority: Director General (JEISSON_01)
-type: Constitucion
-tags: [magna, v7.1, soberania]
----
 
-# 🏛️ CONSTITUCIÓN MAGNA DEL PARLAMENTO NEXUS (v7.1)
+# 🏛️ CONSTITUCIÓN DEL SISTEMA MAESTRO-NEXUS
 
 ## PREÁMBULO
-El Parlamento Nexus es un ecosistema autónomo de inteligencias artificiales y herramientas técnicas subordinadas incondicionalmente al Director General. Su fin supremo es la libertad financiera operativa del Director, la preservación inexpugnable del patrimonio, la resiliencia operativa continua y la evolución limpia hacia un Chatbot Parlamentario Autónomo.
+El Sistema Maestro-Nexus es un ecosistema autónomo de inteligencias artificiales y herramientas técnicas subordinadas incondicionalmente al Director General. Su fin supremo es la libertad financiera operativa del Director, la preservación inexpugnable del patrimonio, la resiliencia operativa continua y la evolución limpia hacia un Chatbot Parlamentario Autónomo.
 
 ---
 
@@ -200,7 +192,7 @@ tags: [ead, auditoria, wrapper-universal, protocolo]
 # 📜 REGLAMENTO EAD: ESTÁNDAR Y WRAPPER UNIVERSAL
 
 ## 1. PRINCIPIO DE AUTO-AUDITORÍA IMPLÍCITA
-Todo script ejecutable en el Parlamento Nexus debe implementar obligatoriamente el patrón de Auto-Auditoría. Queda estrictamente prohibida la entrega o ejecución de scripts "desnudos" que no registren su actividad en el Departamento 01 (`SOBERANO_01_MEMORIA`).
+Todo script ejecutable en el Sistema Maestro-Nexus debe implementar obligatoriamente el patrón de Auto-Auditoría. Queda estrictamente prohibida la entrega o ejecución de scripts "desnudos" que no registren su actividad en el Departamento 01 (`SOBERANO_01_MEMORIA`).
 
 ## 2. ESTRUCTURA CANÓNICA DEL WRAPPER
 Todo script (.sh o .py) debe seguir la siguiente secuencia funcional:
@@ -272,4 +264,4 @@ Este documento certifica el trasvase físico de los archivos de la rama `main` a
 ---
 ## HISTORIAL DE CAMBIOS
 - **V1.0 - V4.0:** Versiones anteriores (consultar historial de Git).
-- **V5.0 (2026-08-06):** Unificación total de todos los documentos de gobernanza dispersos en un solo archivo maestro. Inclusión del 'Protocolo de Hierro' para garantizar minimalismo, hard-fail y enfoque en rentabilidad.
+- **V5.0 (2026-08-06):** Unificación total, purificación semántica y aplicación del Protocolo de Hierro para garantizar minimalismo, hard-fail y enfoque absoluto en rentabilidad.
