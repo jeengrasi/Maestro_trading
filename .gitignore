@@ -24,3 +24,16 @@ __pycache__/
 .nexus_secrets
 .termux_backup_temp
 .config/gh/
+
+# === PROTOCOLO DE SEGURIDAD: BLOQUEO DE ARCHIVOS SENSIBLES ===
+.tor/
+.npm/
+.cache/
+node_modules/
+*.env
+*.env.local
+*secret*
+*token*
+*key*
+INVENTARIO_REPOSITORIO.md
+REPORTE_CONTENIDO_GOBERNAZA_DETALLADO.md

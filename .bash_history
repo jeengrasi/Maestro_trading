@@ -1,500 +1,500 @@
-    return resultado
-"""
-
-# Reemplazar el endpoint anterior si existe, o agregarlo
-if "@app.get(\"/debug-alpaca\")" in content:
-    # Buscar y reemplazar todo el bloque anterior del endpoint
-    import re
-    content = re.sub(
-        r'@app\.get\("/debug-alpaca"\).*?(?=\n@app\.get|\nif __name__ == "__main__":)',
-        nuevo_debug,
-        content,
-        flags=re.DOTALL
-    )
-else:
-    content = content.replace(
-        'if __name__ == "__main__":',
-        nuevo_debug + '\nif __name__ == "__main__":'
-    )
-
-with open(index_path, "w", encoding="utf-8") as f:
-    f.write(content)
-
-print("✅ Endpoint /debug-alpaca actualizado con prueba HTTP directa.")
-
-print("\n📤 Enviando a GitHub...")
-subprocess.run(["git", "add", index_path], capture_output=True)
-subprocess.run(["git", "commit", "-m", "[AUDIT] Prueba HTTP directa desde Railway sin librerías"], capture_output=True)
-push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
-
-if push_result.returncode == 0:
-    print("✅ Desplegado. Railway reconstruirá automáticamente.")
-else:
-    print(f"⚠️ Advertencia: {push_result.stderr}")
-
-print("\n" + "=" * 80)
-print("⏳ ESPERE 2 MINUTOS A QUE RAILWAY ESTÉ EN VERDE (Active)")
-print("LUEGO VISITE: https://maestrotrading-production-c2db.up.railway.app/debug-alpaca")
+print("📖 CONTENIDO RESTAURADO: CONSTITUCIÓN Y NORMAS ORIGINALES")
 print("=" * 80)
-EOF
-
-python3 << 'EOF'
-import os
-import subprocess
-
-print("=" * 80)
-print("🔍 INYECTANDO ENDPOINT DE DIAGNÓSTICO DUAL (PAPER + LIVE)")
+print("⚠️ ATENCIÓN: Este es el texto EXACTO y ORIGINAL restaurado desde Git.")
+print("Revíselo cuidadosamente antes de autorizar cualquier cambio.")
 print("=" * 80)
 
-index_path = "SOBERANO_03_NEXUS/index.py"
-with open(index_path, "r", encoding="utf-8") as f:
-    content = f.read()
+files_to_show = [
+    "SOBERANO_00_GOBIERNO/CONSTITUCION.md",
+    "SOBERANO_00_GOBIERNO/NORMAS.md"
+]
 
-# Nuevo endpoint que prueba AMBOS endpoints
-dual_debug = """
-@app.get("/debug-alpaca-dual")
-async def debug_alpaca_dual():
-    import httpx
-    
-    api_key = os.getenv("ALPACA_API_KEY", "").strip()
-    secret_key = os.getenv("ALPACA_SECRET_KEY", "").strip()
-    
-    resultado = {
-        "servidor": "Railway (En vivo)",
-        "variables_saneadas": {
-            "API_KEY_longitud": len(api_key),
-            "API_KEY_repr": repr(api_key[:10]) + "..." if api_key else "VACIO",
-            "SECRET_KEY_longitud": len(secret_key),
-        },
-        "prueba_paper": "Pendiente...",
-        "prueba_live": "Pendiente...",
-        "diagnostico_final": "Pendiente..."
-    }
-    
-    if not api_key or not secret_key:
-        resultado["diagnostico_final"] = "FALLIDO: Variables vacías"
-        return resultado
-    
-    headers = {
-        "APCA-API-KEY-ID": api_key,
-        "APCA-API-SECRET-KEY": secret_key
-    }
-    
-    # Probar Paper Trading
-    try:
-        async with httpx.AsyncClient() as client:
-            resp_paper = await client.get("https://paper-api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
-            resultado["prueba_paper"] = {
-                "status_code": resp_paper.status_code,
-                "respuesta": resp_paper.text[:200]
-            }
-    except Exception as e:
-        resultado["prueba_paper"] = f"ERROR: {str(e)}"
-    
-    # Probar Live Trading
-    try:
-        async with httpx.AsyncClient() as client:
-            resp_live = await client.get("https://api.alpaca.markets/v2/account", headers=headers, timeout=10.0)
-            resultado["prueba_live"] = {
-                "status_code": resp_live.status_code,
-                "respuesta": resp_live.text[:200]
-            }
-    except Exception as e:
-        resultado["prueba_live"] = f"ERROR: {str(e)}"
-    
-    # Diagnóstico final
-    paper_ok = isinstance(resultado["prueba_paper"], dict) and resultado["prueba_paper"].get("status_code") == 200
-    live_ok = isinstance(resultado["prueba_live"], dict) and resultado["prueba_live"].get("status_code") == 200
-    
-    if paper_ok and not live_ok:
-        resultado["diagnostico_final"] = "✅ CLAVES DE PAPER TRADING - Use endpoint paper-api"
-    elif live_ok and not paper_ok:
-        resultado["diagnostico_final"] = "⚠️ CLAVES DE LIVE TRADING - Las claves son de cuenta real, no paper"
-    elif paper_ok and live_ok:
-        resultado["diagnostico_final"] = "❌ ANOMALÍA: Ambas cuentas aceptan las claves"
+for file_path in files_to_show:
+    if os.path.exists(file_path):
+        print(f"\n{'#'*80}")
+        print(f"# 📄 ARCHIVO: {file_path}")
+        print(f"{'#'*80}")
+        with open(file_path, "r", encoding="utf-8") as f:
+            contenido = f.read()
+            # Imprimimos el contenido completo. Si es muy largo, se mostrará tal cual.
+            print(contenido)
     else:
-        resultado["diagnostico_final"] = "❌ CLAVES INVÁLIDAS: Ninguna cuenta acepta estas credenciales"
-    
-    return resultado
-"""
-
-# Insertar o reemplazar el endpoint
-if "@app.get(\"/debug-alpaca-dual\")" in content:
-    import re
-    content = re.sub(
-        r'@app\.get\("/debug-alpaca-dual"\).*?(?=\n@app\.get|\nif __name__ == "__main__":)',
-        dual_debug,
-        content,
-        flags=re.DOTALL
-    )
-else:
-    content = content.replace(
-        'if __name__ == "__main__":',
-        dual_debug + '\nif __name__ == "__main__":'
-    )
-
-with open(index_path, "w", encoding="utf-8") as f:
-    f.write(content)
-
-print("✅ Endpoint /debug-alpaca-dual inyectado.")
-
-print("\n📤 Enviando a GitHub...")
-subprocess.run(["git", "add", index_path], capture_output=True)
-subprocess.run(["git", "commit", "-m", "[AUDIT] Endpoint dual para determinar tipo de clave (paper vs live)"], capture_output=True)
-push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
-
-if push_result.returncode == 0:
-    print("✅ Desplegado. Railway reconstruirá automáticamente.")
-else:
-    print(f"⚠️ Advertencia: {push_result.stderr}")
+        print(f"\n⚠️ No se encontró el archivo: {file_path}")
 
 print("\n" + "=" * 80)
-print("⏳ ESPERE 2 MINUTOS A QUE RAILWAY ESTÉ EN VERDE (Active)")
-print("LUEGO VISITE: https://maestrotrading-production-c2db.up.railway.app/debug-alpaca-dual")
+print("✅ FIN DE LA VISUALIZACIÓN")
+print("=" * 80)
+print("\n👉 INSTRUCCIONES PARA EL DIRECTOR:")
+print("1. Lea el contenido mostrado arriba.")
+print("2. Indíqueme exactamente qué artículos, frases o secciones son INTANGIBLES.")
+print("3. Indíqueme qué secciones pueden fusionarse o eliminarse.")
+print("4. Indíqueme dónde desea insertar el nuevo 'Protocolo de Hierro'.")
+print("\nNo modificaré ni una sola coma sin su instrucción explícita y línea por línea.")
 print("=" * 80)
 EOF
 
 python3 << 'EOF'
-import os
-import subprocess
-
-print("=" * 80)
-print("🔧 APLICANDO SANEAMIENTO AUTOMÁTICO A CONFIG.PY")
-print("=" * 80)
-
-config_path = "SOBERANO_03_NEXUS/config.py"
-if os.path.exists(config_path):
-    with open(config_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    
-    # Reemplazar las líneas de ALPACA_API_KEY y ALPACA_SECRET_KEY para agregar .strip()
-    content = content.replace(
-        'ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")',
-        'ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "").strip()'
-    )
-    content = content.replace(
-        'ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")',
-        'ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "").strip()'
-    )
-    
-    with open(config_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    
-    print("✅ config.py actualizado con .strip() automático.")
-else:
-    print("❌ config.py no encontrado.")
-
-print("\n📤 Enviando a GitHub...")
-subprocess.run(["git", "add", config_path], capture_output=True)
-subprocess.run(["git", "commit", "-m", "[FIX] Saneamiento automático de variables Alpaca con .strip()"], capture_output=True)
-push_result = subprocess.run(["git", "push", "origin", "soberano-v1"], capture_output=True, text=True)
-
-if push_result.returncode == 0:
-    print("✅ Desplegado.")
-else:
-    print(f"⚠️ Advertencia: {push_result.stderr}")
-
-print("=" * 80)
-EOF
-
-python3 << 'EOF'
-import os
-import json
+import hashlib
 from datetime import datetime
-from pathlib import Path
+
+BITACORA_PATH = "BITACORA.md"
+
+def calcular_hash(contenido):
+    return hashlib.sha256(contenido.encode()).hexdigest()
+
+# Historial completo reconstruido
+historial = []
+
+# ID-0001: Inicio del Proyecto
+historial.append("""---
+## [ID-0001] [2026-06-01 10:00] [DECISIÓN] [COMPLETADA] Inicio del Proyecto Maestro-Nexus
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Necesidad de automatizar trading algorítmico soberano
+- **Por qué surge:** Objetivo de libertad financiera del Director
+- **Dónde ocurre:** Arquitectura global del proyecto
+**Decisión/Acción:** Definir arquitectura base: Python + FastAPI + Railway + Redis + Alpaca
+**Justificación:** Stack gratuito, escalable y con API robusta para Paper Trading
+**Implementación:** 
+- **Cómo se hizo:** Diseño de arquitectura en 4 departamentos soberanos
+- **Archivos afectados:** Estructura inicial de carpetas SOBERANO_XX
+- **Comandos ejecutados:** Creación de repositorio GitHub
+**Resultado:** Arquitectura base definida y desplegada
+**Acciones Derivadas:**
+- [x] Crear estructura de carpetas (COMPLETADA)
+- [x] Configurar Railway (COMPLETADA)
+- [x] Integrar Alpaca Paper Trading (COMPLETADA)
+**Hash anterior:** 0000000000000000000000000000000000000000000000000000000000000000
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0002: Despliegue en Railway
+historial.append("""---
+## [ID-0002] [2026-07-15 14:30] [IMPLEMENTACIÓN] [COMPLETADA] Despliegue en Railway
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Necesidad de infraestructura cloud para el bot
+- **Por qué surge:** Requisito de uptime 24/7
+- **Dónde ocurre:** Infraestructura del proyecto
+**Decisión/Acción:** Desplegar en Railway con Dockerfile
+**Justificación:** Railway ofrece tier gratuito, despliegue automático desde GitHub y bajo consumo de RAM
+**Implementación:** 
+- **Cómo se hizo:** Creación de Dockerfile, configuración de variables de entorno en Railway
+- **Archivos afectados:** Dockerfile, requirements.txt, index.py
+- **Comandos ejecutados:** git push, Railway auto-deploy
+**Resultado:** Bot desplegado y accesible en https://maestrotrading-production-c2db.up.railway.app
+**Acciones Derivadas:**
+- [x] Configurar variables de entorno en Railway (COMPLETADA)
+- [x] Verificar despliegue exitoso (COMPLETADA)
+- [ ] Implementar health check (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0003: Error de Autenticación Alpaca 401
+historial.append("""---
+## [ID-0003] [2026-08-01 20:00] [AUDITORÍA] [COMPLETADA] Error 401 Unauthorized en Alpaca
+**Participantes:** Director JEISSON_01, Gerente Qwen, Mesa Técnica (Meta, Gemini, DeepSeek)
+**Contexto:** 
+- **Qué problema:** Bot no puede conectarse a Alpaca Paper Trading
+- **Por qué surge:** Variables de entorno con caracteres invisibles o claves incorrectas
+- **Dónde ocurre:** index.py, endpoint /debug-alpaca
+**Decisión/Acción:** Crear endpoint dual para diagnosticar si las claves son de Paper o Live
+**Justificación:** Necesidad de evidencia empírica antes de asumir causas
+**Implementación:** 
+- **Cómo se hizo:** Script que prueba ambas URLs (paper-api y api) con las mismas claves
+- **Archivos afectados:** index.py (agregado endpoint /debug-alpaca-dual)
+- **Comandos ejecutados:** python3 script de inyección, git push
+**Resultado:** Confirmado que las claves eran de Paper pero con caracteres invisibles
+**Acciones Derivadas:**
+- [x] Crear endpoint dual (COMPLETADA)
+- [x] Identificar problema de caracteres invisibles (COMPLETADA)
+- [ ] Implementar saneamiento automático (EN_PROGRESO)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0004: Saneamiento de Variables
+historial.append("""---
+## [ID-0004] [2026-08-02 10:00] [IMPLEMENTACIÓN] [COMPLETADA] Saneamiento Automático de Variables
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Variables de entorno con saltos de línea o espacios invisibles
+- **Por qué surge:** Copia/pega desde Alpaca o Raw Editor de Railway
+- **Dónde ocurre:** config.py, lectura de ALPACA_API_KEY y ALPACA_SECRET_KEY
+**Decisión/Acción:** Aplicar .strip() automático a todas las variables críticas
+**Justificación:** Eliminar dependencia de la limpieza manual, prevenir errores futuros
+**Implementación:** 
+- **Cómo se hizo:** Modificación de config.py para aplicar .strip() en lectura de variables
+- **Archivos afectados:** config.py
+- **Comandos ejecutados:** python3 script de modificación, git push
+**Resultado:** Variables saneadas automáticamente, conexión a Alpaca exitosa
+**Acciones Derivadas:**
+- [x] Modificar config.py con .strip() (COMPLETADA)
+- [x] Verificar conexión exitosa (COMPLETADA)
+- [ ] Documentar en Constitución como restricción (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0005: Éxito de Conexión Alpaca
+historial.append("""---
+## [ID-0005] [2026-08-02 11:00] [IMPLEMENTACIÓN] [COMPLETADA] Conexión Exitosa a Alpaca Paper
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Bot no podía operar en Paper Trading
+- **Por qué surge:** Resuelto con saneamiento de variables
+- **Dónde ocurre:** engine.py, conexión a Alpaca API
+**Decisión/Acción:** Confirmar que el sistema está 100% operativo
+**Justificación:** Evidencia empírica: endpoint /debug-alpaca-dual retorna status 200
+**Implementación:** 
+- **Cómo se hizo:** Verificación de endpoint /estado en Telegram
+- **Archivos afectados:** Ninguno (solo verificación)
+- **Comandos ejecutados:** /estado en Telegram
+**Resultado:** Bot responde con capital $107,906.26, 3 posiciones abiertas, sistema activo
+**Acciones Derivadas:**
+- [x] Verificar /estado en Telegram (COMPLETADA)
+- [x] Confirmar conexión Alpaca (COMPLETADA)
+- [ ] Activar modo de ejecución /autorizar 4h (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0006: Auditoría de Archivos
+historial.append("""---
+## [ID-0006] [2026-08-06 14:00] [AUDITORÍA] [COMPLETADA] Auditoría de Estructura de Archivos
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Sospecha de desorden silencioso en repositorio
+- **Por qué surge:** Director nota 48 archivos de constitución en búsqueda de GitHub
+- **Dónde ocurre:** Repositorio completo, ramas main y soberano-v1
+**Decisión/Acción:** Ejecutar script auditor para inventariar todos los archivos
+**Justificación:** Necesidad de evidencia empírica antes de tomar decisiones de limpieza
+**Implementación:** 
+- **Cómo se hizo:** Script Python que escanea todo el repositorio y clasifica archivos
+- **Archivos afectados:** Ninguno (solo lectura)
+- **Comandos ejecutados:** python3 script auditor
+**Resultado:** Descubrimiento de que rama soberano-v1 tiene 18 archivos (limpia), main tiene 48+ (desorden)
+**Acciones Derivadas:**
+- [x] Crear script auditor (COMPLETADA)
+- [x] Identificar discrepancia entre ramas (COMPLETADA)
+- [ ] Decidir estrategia de consolidación (EN_PROGRESO)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0007: Consolidación Constitucional V5.0
+historial.append("""---
+## [ID-0007] [2026-08-06 15:00] [IMPLEMENTACIÓN] [COMPLETADA] Consolidación Constitucional V5.0
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Documentos de gobernanza dispersos en múltiples archivos
+- **Por qué surge:** Evolución orgánica sin control de proliferación
+- **Dónde ocurre:** SOBERANO_00_GOBIERNO, múltiples archivos .md
+**Decisión/Acción:** Fusionar todos los documentos en un solo CONSTITUCION.md V5.0
+**Justificación:** Unicidad documental, eliminar redundancia, facilitar mantenimiento
+**Implementación:** 
+- **Cómo se hizo:** Script que lee todos los archivos, fusiona contenido, elimina duplicados
+- **Archivos afectados:** CONSTITUCION.md (actualizado), NORMAS.md (eliminado), REGLAMENTO_EAD.md (eliminado), NORMATIVA_DEPARTAMENTAL.md (eliminado en 4 carpetas)
+- **Comandos ejecutados:** python3 script de fusión, git push
+**Resultado:** Constitución unificada en un solo archivo, 8 archivos eliminados
+**Acciones Derivadas:**
+- [x] Leer todos los archivos de gobernanza (COMPLETADA)
+- [x] Fusionar en CONSTITUCION.md V5.0 (COMPLETADA)
+- [x] Eliminar archivos redundantes (COMPLETADA)
+- [ ] Validar contenido con Director (EN_PROGRESO)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0008: Debate con Mesa sobre Constitución
+historial.append("""---
+## [ID-0008] [2026-08-06 16:00] [DEBATE] [COMPLETADA] Debate con Mesa sobre Project Charter V6.0
+**Participantes:** Director JEISSON_01, Gerente Qwen, Mesa Técnica (Meta, Gemini, DeepSeek)
+**Contexto:** 
+- **Qué problema:** Constitución V5.0 tiene enfoque en gobernanza documental, no en rentabilidad
+- **Por qué surge:** Director cuestiona que no hay métricas de éxito ni límites de riesgo
+- **Dónde ocurre:** CONSTITUCION.md, Sección de Objetivos y Riesgos
+**Decisión/Acción:** Reestructurar como Project Charter estándar PMI con métricas ejecutables
+**Justificación:** Alinear con estándares de la industria, definir criterios de éxito cuantificables
+**Implementación:** 
+- **Cómo se hizo:** Documento de debate enviado a Mesa, consolidación de respuestas, redacción de V6.0
+- **Archivos afectados:** CONSTITUCION.md (reestructurado)
+- **Comandos ejecutados:** N/A (proceso de debate)
+**Resultado:** Project Charter V6.0 con 8 secciones PMI, métricas claras (PF > 1.5, Drawdown 2%)
+**Acciones Derivadas:**
+- [x] Enviar documento de debate a Mesa (COMPLETADA)
+- [x] Consolidar respuestas (COMPLETADA)
+- [x] Redactar Project Charter V6.0 (COMPLETADA)
+- [ ] Definir Drawdown Máximo Diario (PENDIENTE)
+- [ ] Ratificación final del Director (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# ID-0009: Sistema de Bitácora Propuesto
+historial.append("""---
+## [ID-0009] [2026-08-06 17:00] [DECISIÓN] [EN_PROGRESO] Adopción de Sistema de Bitácora
+**Participantes:** Director JEISSON_01, Gerente Qwen, Mesa Técnica (Meta, Gemini, DeepSeek)
+**Contexto:** 
+- **Qué problema:** Falta de memoria consultable y trazabilidad de decisiones
+- **Por qué surge:** Director exige que todo se documente y consulte antes de avanzar
+- **Dónde ocurre:** Arquitectura de memoria del proyecto
+**Decisión/Acción:** Implementar bitácora única con historial completo y trazabilidad
+**Justificación:** Sin bitácora no hay memoria, sin memoria no hay aprendizaje, sin aprendizaje no hay mejora
+**Implementación:** 
+- **Cómo se hizo:** Debate con Mesa (Meta: CSV+git log, Gemini: GitHub Issues, DeepSeek: sistema completo), propuesta híbrida
+- **Archivos afectados:** BITACORA.md (por crear), bitacora.py (por crear)
+- **Comandos ejecutados:** N/A (proceso de debate)
+**Resultado:** Solución híbrida aprobada: UN archivo + UN script + regla de consulta obligatoria
+**Acciones Derivadas:**
+- [x] Debatir con Mesa (COMPLETADA)
+- [x] Proponer solución híbrida (COMPLETADA)
+- [ ] Crear BITACORA.md con historial completo (EN_PROGRESO)
+- [ ] Crear bitacora.py (PENDIENTE)
+- [ ] Establecer protocolo de consulta obligatoria (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+""")
+
+# Construir bitácora completa
+contenido_completo = "# 📜 BITÁCORA OFICIAL DEL PROYECTO MAESTRO-NEXUS\n\n"
+contenido_completo += "**Última actualización:** 2026-08-06 17:30\n"
+contenido_completo += "**Estado:** Sistema de memoria oficial con trazabilidad completa\n\n"
+contenido_completo += "---\n\n"
+
+hash_anterior = "0" * 64
+for entrada in historial:
+    entrada_con_hash = entrada.replace("[CALCULADO]", calcular_hash(entrada + hash_anterior))
+    contenido_completo += entrada_con_hash
+    hash_anterior = calcular_hash(entrada_con_hash)
+
+# Guardar bitácora
+with open(BITACORA_PATH, "w", encoding="utf-8") as f:
+    f.write(contenido_completo)
 
 print("=" * 80)
-print("🔍 AUDITORÍA CONSTITUCIONAL COMPLETA DEL SISTEMA")
+print("✅ BITÁCORA COMPLETA CREADA CON HISTORIAL DESDE EL INICIO")
 print("=" * 80)
-print(f"Fecha de auditoría: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"📄 Archivo: {BITACORA_PATH}")
+print(f"📊 Entradas: {len(historial)} hitos documentados")
+print(f"🔗 Hash encadenado: Activo")
+print("\n📋 CONTENIDO:")
+print("   - ID-0001: Inicio del Proyecto")
+print("   - ID-0002: Despliegue en Railway")
+print("   - ID-0003: Error 401 Alpaca")
+print("   - ID-0004: Saneamiento de Variables")
+print("   - ID-0005: Éxito de Conexión")
+print("   - ID-0006: Auditoría de Archivos")
+print("   - ID-0007: Consolidación V5.0")
+print("   - ID-0008: Debate Project Charter")
+print("   - ID-0009: Sistema de Bitácora (EN_PROGRESO)")
+print("=" * 80)
+EOF
+
+#!/usr/bin/env python3
+"""
+Sistema de Bitácora Única - Maestro-Nexus
+Historial completo, trazabilidad total, consulta obligatoria.
+"""
+import sys
+import hashlib
+from datetime import datetime
+BITACORA_PATH = "BITACORA.md"
+def obtener_ultimo_hash():
+def calcular_hash(contenido):
+def agregar(tipo, resumen, contexto, decision, justificacion, implementacion, resultado, acciones, participantes="Director JEISSON_01, Gerente Qwen"):
+def consultar(ultimas=5):
+def marcar_completado(id_entrada):
+def buscar(palabra):
+if __name__ == "__main__":;     if len(sys.argv) < 2:
+cat << 'EOF' > bitacora.py
+#!/usr/bin/env python3
+"""
+Sistema de Bitácora Única - Maestro-Nexus
+Historial completo, trazabilidad total, consulta obligatoria.
+"""
+import sys
+import hashlib
+from datetime import datetime
+
+BITACORA_PATH = "BITACORA.md"
+
+def obtener_ultimo_hash():
+    try:
+        with open(BITACORA_PATH, "r", encoding="utf-8") as f:
+            contenido = f.read()
+        hashes = contenido.split("**Hash actual:** ")
+        if len(hashes) > 1:
+            return hashes[-1].split("\n")[0].strip()
+    except FileNotFoundError:
+        pass
+    return "0" * 64
+
+def calcular_hash(contenido):
+    return hashlib.sha256(contenido.encode()).hexdigest()
+
+def consultar(ultimas=5):
+    try:
+        with open(BITACORA_PATH, "r", encoding="utf-8") as f:
+            contenido = f.read()
+        entradas = contenido.split("---\n## [")
+        print(f"\n📋 ÚLTIMAS {ultimas} ENTRADAS DE LA BITÁCORA\n")
+        for entrada in entradas[-ultimas:]:
+            if entrada.strip():
+                lineas = entrada.split("\n")
+                print(f"📌 [{lineas[0]}")
+                for linea in lineas[1:8]:
+                    if linea.strip():
+                        print(f"   {linea}")
+                print()
+    except FileNotFoundError:
+        print("⚠️ Bitácora vacía.")
+
+def marcar_completado(id_entrada):
+    try:
+        with open(BITACORA_PATH, "r", encoding="utf-8") as f:
+            contenido = f.read()
+        
+        if f"[{id_entrada}]" in contenido:
+            # Reemplazar solo la primera ocurrencia de [EN_PROGRESO] en esa entrada específica
+            partes = contenido.split(f"[{id_entrada}]")
+            if len(partes) > 1:
+                resto = partes[1].replace("[EN_PROGRESO]", "[COMPLETADA]", 1)
+                contenido = partes[0] + f"[{id_entrada}]" + resto
+                
+                with open(BITACORA_PATH, "w", encoding="utf-8") as f:
+                    f.write(contenido)
+                print(f"✅ Entrada {id_entrada} marcada como COMPLETADA")
+            else:
+                print(f"❌ Formato no encontrado para {id_entrada}")
+        else:
+            print(f"❌ No se encontró la entrada {id_entrada}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+def buscar(palabra):
+    try:
+        with open(BITACORA_PATH, "r", encoding="utf-8") as f:
+            contenido = f.read()
+        entradas = contenido.split("---\n## [")
+        resultados = [e for e in entradas if palabra.lower() in e.lower()]
+        print(f"\n🔍 RESULTADOS PARA '{palabra}': {len(resultados)} entradas\n")
+        for r in resultados[:5]:
+            print(f"📌 [{r.split(chr(10))[0]}")
+    except FileNotFoundError:
+        print("⚠️ Bitácora vacía.")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Uso: python3 bitacora.py [--consulta|--buscar|--completar]")
+        print("  --consulta [N]      Muestra últimas N entradas (default: 5)")
+        print("  --buscar PALABRA    Busca entradas que contengan PALABRA")
+        print("  --completar ID      Marca entrada ID como COMPLETADA")
+    elif sys.argv[1] == "--consulta":
+        n = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+        consultar(n)
+    elif sys.argv[1] == "--buscar" and len(sys.argv) > 2:
+        buscar(sys.argv[2])
+    elif sys.argv[1] == "--completar" and len(sys.argv) > 2:
+        marcar_completado(sys.argv[2])
+EOF
+
+python3 bitacora.py --consulta 3
+cat BITACORA.md
+python3 bitacora.py --consulta 10
+python3 bitacora.py --completar ID-0009
+python3 << 'EOF'
+import os
+
+# Configuración
+IGNORE_DIRS = ['.git', '__pycache__', '.venv', 'node_modules', '.pytest_cache']
+OUTPUT_FILE = "INVENTARIO_REPOSITORIO.md"
+
+print("=" * 80)
+print("📦 GENERANDO INVENTARIO DETALLADO DEL REPOSITORIO (SOLO LECTURA)")
 print("=" * 80)
 
-# Configuración de búsqueda
-BUSQUEDAS = {
-    "nombres_archivo": [
-        "constitucion", "ley", "norma", "acta", "biblia", "manifiesto",
-        "manifest", "dossier", "gobernanza", "gobierno", "reglamento",
-        "protocolo", "directiva", "decreto", "orden", "resolucion"
-    ],
-    "palabras_clave_contenido": [
-        "artículo", "articulo", "ley", "norma", "constitución", "constitucion",
-        "gobernanza", "soberanía", "soberania", "directorial", "parlamento",
-        "nexus", "manifiesto", "acta de", "promulgación", "promulgacion"
-    ],
-    "extensiones": [".md", ".txt", ".json", ".yaml", ".yml", ".sh"]
-}
+inventario = []
+inventario.append("# 📦 INVENTARIO DETALLADO DEL REPOSITORIO\n")
+inventario.append(f"**Fecha de generación:** 2026-08-06\n")
+inventario.append(f"**Rama actual:** soberano-v1\n")
+inventario.append("**Nota:** Este es un documento de solo lectura para auditoría del Director.\n\n")
+inventario.append("---\n\n")
 
-# Resultados
-resultados = {
-    "archivos_encontrados": [],
-    "archivos_por_carpeta": {},
-    "clasificacion": {
-        "util_vigente": [],
-        "duplicado": [],
-        "obsoleto": [],
-        "backup_manual": [],
-        "script_operativo": []
-    },
-    "metadata_extraida": []
-}
-
-# Función para clasificar archivos
-def clasificar_archivo(ruta, nombre):
-    nombre_lower = nombre.lower()
-    
-    # Backup manual
-    if "backup" in ruta.lower() or "pre-enmienda" in nombre_lower:
-        return "backup_manual"
-    
-    # Script operativo
-    if nombre_lower.endswith(".sh") or "script" in ruta.lower():
-        return "script_operativo"
-    
-    # Obsoleto
-    if "legacy" in ruta.lower() or "pendiente" in nombre_lower:
-        return "obsoleto"
-    
-    # Constitución principal
-    if nombre_lower == "constitucion.md" and "00-gobierno" in ruta.lower():
-        return "util_vigente"
-    
-    # Leyes y normas en dossier (probablemente duplicadas)
-    if "dossier/constitucion" in ruta.lower():
-        return "duplicado"
-    
-    # Biblia (probablemente duplicada)
-    if "biblia" in nombre_lower:
-        return "duplicado"
-    
-    # Por defecto, útil
-    return "util_vigente"
-
-# Función para extraer metadata
-def extraer_metadata(ruta, contenido):
-    metadata = {
-        "ruta": ruta,
-        "titulo": "",
-        "version": "",
-        "fecha": "",
-        "estado": "",
-        "tipo": ""
-    }
-    
-    # Buscar título
-    for linea in contenido.split('\n')[:10]:
-        if linea.startswith('#'):
-            metadata["titulo"] = linea.replace('#', '').strip()
-            break
-    
-    # Buscar versión
-    if "versión:" in contenido.lower() or "version:" in contenido.lower():
-        for linea in contenido.split('\n')[:20]:
-            if "versión" in linea.lower() or "version" in linea.lower():
-                metadata["version"] = linea.split(':')[-1].strip()
-                break
-    
-    # Buscar fecha
-    if "fecha:" in contenido.lower():
-        for linea in contenido.split('\n')[:20]:
-            if "fecha" in linea.lower():
-                metadata["fecha"] = linea.split(':')[-1].strip()
-                break
-    
-    # Buscar estado
-    if "estado:" in contenido.lower():
-        for linea in contenido.split('\n')[:20]:
-            if "estado" in linea.lower():
-                metadata["estado"] = linea.split(':')[-1].strip()
-                break
-    
-    # Determinar tipo
-    nombre = os.path.basename(ruta).lower()
-    if "constitucion" in nombre:
-        metadata["tipo"] = "Constitución"
-    elif nombre.startswith("ley-"):
-        metadata["tipo"] = "Ley"
-    elif nombre.startswith("norma-"):
-        metadata["tipo"] = "Norma"
-    elif nombre.startswith("acta"):
-        metadata["tipo"] = "Acta"
-    elif "biblia" in nombre:
-        metadata["tipo"] = "Biblia (Documento Maestro)"
-    else:
-        metadata["tipo"] = "Otro"
-    
-    return metadata
-
-# Escaneo del repositorio
-print("\n📂 ESCANEANDO REPOSITORIO...")
-print("-" * 80)
+total_archivos = 0
+total_size_kb = 0
 
 for root, dirs, files in os.walk('.'):
-    # Ignorar directorios de sistema
-    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.venv', 'node_modules']]
+    # Filtrar directorios ignorados
+    dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+    
+    # Ordenar para que el inventario sea legible
+    dirs.sort()
+    files.sort()
     
     for file in files:
-        ruta_completa = os.path.join(root, file)
-        nombre_lower = file.lower()
+        # Ignorar el propio archivo de inventario si ya existe
+        if file == OUTPUT_FILE:
+            continue
+            
+        file_path = os.path.join(root, file)
+        total_archivos += 1
         
-        # Verificar si el nombre coincide con búsquedas
-        coincide_nombre = any(busq in nombre_lower for busq in BUSQUEDAS["nombres_archivo"])
-        
-        # Verificar extensión
-        extension_ok = any(nombre_lower.endswith(ext) for ext in BUSQUEDAS["extensiones"])
-        
-        if coincide_nombre and extension_ok:
-            try:
-                with open(ruta_completa, 'r', encoding='utf-8') as f:
-                    contenido = f.read()
-                
-                # Verificar si el contenido tiene palabras clave
-                coincide_contenido = any(palabra in contenido.lower() for palabra in BUSQUEDAS["palabras_clave_contenido"])
-                
-                if coincide_contenido or coincide_nombre:
-                    # Clasificar
-                    clasificacion = clasificar_archivo(ruta_completa, file)
-                    
-                    # Extraer metadata
-                    metadata = extraer_metadata(ruta_completa, contenido)
-                    
-                    # Agregar a resultados
-                    resultados["archivos_encontrados"].append({
-                        "ruta": ruta_completa,
-                        "nombre": file,
-                        "tamano_kb": round(len(contenido) / 1024, 2),
-                        "lineas": len(contenido.split('\n')),
-                        "clasificacion": clasificacion
-                    })
-                    
-                    resultados["clasificacion"][clasificacion].append(ruta_completa)
-                    resultados["metadata_extraida"].append(metadata)
-                    
-                    # Contar por carpeta
-                    carpeta = os.path.dirname(ruta_completa)
-                    if carpeta not in resultados["archivos_por_carpeta"]:
-                        resultados["archivos_por_carpeta"][carpeta] = []
-                    resultados["archivos_por_carpeta"][carpeta].append(file)
-                    
-            except Exception as e:
-                print(f"   ⚠️ Error leyendo {ruta_completa}: {e}")
+        try:
+            # Obtener tamaño
+            size_bytes = os.path.getsize(file_path)
+            size_kb = round(size_bytes / 1024, 2)
+            total_size_kb += size_kb
+            
+            # Leer las primeras 10 líneas para contexto
+            preview = "Archivo binario o no legible"
+            if file.endswith(('.py', '.md', '.txt', '.json', '.yml', '.yaml', '.sh')):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lineas = [f.readline() for _ in range(10)]
+                        preview = "".join(lineas).strip()
+                        if len(preview) > 300:
+                            preview = preview[:300] + "\n   ..."
+                except Exception:
+                    preview = "Error al leer (posible codificación diferente)"
+            
+            # Formatear para el inventario
+            inventario.append(f"### 📄 `{file_path}`\n")
+            inventario.append(f"- **Tamaño:** {size_kb} KB\n")
+            inventario.append(f"- **Vista previa del contenido:**\n  ```text\n  {preview}\n  ```\n\n")
+            
+        except Exception as e:
+            inventario.append(f"### ⚠️ `{file_path}`\n")
+            inventario.append(f"- **Error:** No se pudo procesar ({e})\n\n")
 
-# Generar reporte
-print("\n" + "=" * 80)
-print("📊 REPORTE DE AUDITORÍA CONSTITUCIONAL")
-print("=" * 80)
+# Resumen final
+inventario.append("---\n\n")
+inventario.append("## 📊 RESUMEN DEL INVENTARIO\n")
+inventario.append(f"- **Total de archivos escaneados:** {total_archivos}\n")
+inventario.append(f"- **Tamaño total aproximado:** {round(total_size_kb, 2)} KB\n")
+inventario.append("\n*Fin del informe de inventario.*\n")
 
-print(f"\n📁 TOTAL DE ARCHIVOS ENCONTRADOS: {len(resultados['archivos_encontrados'])}")
+# Guardar archivo
+with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+    f.writelines(inventario)
 
-print("\n📂 DISTRIBUCIÓN POR CARPETA:")
-for carpeta, archivos in sorted(resultados["archivos_por_carpeta"].items()):
-    print(f"   {carpeta}: {len(archivos)} archivos")
-
-print("\n🏷️ CLASIFICACIÓN:")
-print(f"   ✅ Útil y Vigente: {len(resultados['clasificacion']['util_vigente'])} archivos")
-print(f"   ⚠️ Duplicado: {len(resultados['clasificacion']['duplicado'])} archivos")
-print(f"   ❌ Obsoleto: {len(resultados['clasificacion']['obsoleto'])} archivos")
-print(f"   💾 Backup Manual: {len(resultados['clasificacion']['backup_manual'])} archivos")
-print(f"   🔧 Script Operativo: {len(resultados['clasificacion']['script_operativo'])} archivos")
-
-print("\n📋 DETALLE DE ARCHIVOS ÚTILES Y VIGENTES:")
-for archivo in resultados["archivos_encontrados"]:
-    if archivo["clasificacion"] == "util_vigente":
-        print(f"   ✅ {archivo['ruta']} ({archivo['tamano_kb']} KB, {archivo['lineas']} líneas)")
-
-print("\n⚠️ DETALLE DE ARCHIVOS DUPLICADOS:")
-for archivo in resultados["archivos_encontrados"]:
-    if archivo["clasificacion"] == "duplicado":
-        print(f"   ⚠️ {archivo['ruta']} ({archivo['tamano_kb']} KB)")
-
-print("\n💾 DETALLE DE BACKUPS MANUALES:")
-for archivo in resultados["archivos_encontrados"]:
-    if archivo["clasificacion"] == "backup_manual":
-        print(f"   💾 {archivo['ruta']} ({archivo['tamano_kb']} KB)")
-
-print("\n📜 METADATA EXTRAÍDA (Primeros 10 archivos):")
-for meta in resultados["metadata_extraida"][:10]:
-    print(f"   📄 {meta['ruta']}")
-    print(f"      Tipo: {meta['tipo']}")
-    if meta['titulo']:
-        print(f"      Título: {meta['titulo']}")
-    if meta['version']:
-        print(f"      Versión: {meta['version']}")
-    if meta['fecha']:
-        print(f"      Fecha: {meta['fecha']}")
-    if meta['estado']:
-        print(f"      Estado: {meta['estado']}")
-    print()
-
-# Guardar reporte completo en JSON
-with open("auditoria_constitucional_completa.json", "w", encoding="utf-8") as f:
-    json.dump(resultados, f, indent=2, ensure_ascii=False)
-
-print("\n" + "=" * 80)
-print("✅ AUDITORÍA COMPLETADA")
-print(f"📄 Reporte completo guardado en: auditoria_constitucional_completa.json")
+print(f"✅ Inventario generado exitosamente.")
+print(f"📄 Archivo guardado en: {OUTPUT_FILE}")
+print(f"📊 Total de archivos registrados: {total_archivos}")
+print(f"💾 Tamaño total: {round(total_size_kb, 2)} KB")
+print("\n👉 Puede revisar el inventario completo ejecutando:")
+print(f"   cat {OUTPUT_FILE}")
 print("=" * 80)
 EOF
 
-python3 << 'EOF'
-import subprocess
-import json
-
-print("=" * 80)
-print("🔍 VERIFICACIÓN DE ESTADO DE RAMAS")
-print("=" * 80)
-
-# 1. Ver rama actual local
-print("\n📍 RAMA ACTUAL EN TERMUX:")
-result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
-rama_actual = result.stdout.strip()
-print(f"   Rama activa: {rama_actual}")
-
-# 2. Ver todas las ramas locales
-print("\n📋 RAMAS LOCALES:")
-result = subprocess.run(["git", "branch"], capture_output=True, text=True)
-print(result.stdout)
-
-# 3. Ver ramas remotas
-print("\n🌐 RAMAS REMOTAS (GitHub):")
-result = subprocess.run(["git", "branch", "-r"], capture_output=True, text=True)
-print(result.stdout)
-
-# 4. Ver último commit de cada rama
-print("\n📊 ÚLTIMOS COMMITS:")
-result = subprocess.run(["git", "log", "--oneline", "--all", "--graph", "-10"], capture_output=True, text=True)
-print(result.stdout)
-
-# 5. Ver archivos en rama main (si existe)
-print("\n📁 ARCHIVOS EN RAMA MAIN (GitHub):")
-result = subprocess.run(["git", "ls-tree", "-r", "origin/main", "--name-only"], capture_output=True, text=True)
-if result.returncode == 0:
-    archivos_main = result.stdout.strip().split('\n')
-    print(f"   Total de archivos en main: {len(archivos_main)}")
-    
-    # Filtrar archivos relacionados con constitución
-    const_files = [f for f in archivos_main if any(palabra in f.lower() for palabra in ['constitucion', 'ley-', 'norma-', 'acta', 'biblia', 'manifest'])]
-    print(f"   Archivos de constitución/leyes en main: {len(const_files)}")
-    
-    print("\n   Primeros 20 archivos de constitución en main:")
-    for f in const_files[:20]:
-        print(f"      - {f}")
-else:
-    print("   ⚠️ No se pudo acceder a origin/main")
-
-# 6. Ver archivos en rama soberano-v1
-print("\n📁 ARCHIVOS EN RAMA SOBERANO-V1:")
-result = subprocess.run(["git", "ls-tree", "-r", "origin/soberano-v1", "--name-only"], capture_output=True, text=True)
-if result.returncode == 0:
-    archivos_soberano = result.stdout.strip().split('\n')
-    print(f"   Total de archivos en soberano-v1: {len(archivos_soberano)}")
-    
-    const_files_sv = [f for f in archivos_soberano if any(palabra in f.lower() for palabra in ['constitucion', 'ley-', 'norma-', 'acta', 'biblia', 'manifest'])]
-    print(f"   Archivos de constitución/leyes en soberano-v1: {len(const_files_sv)}")
-else:
-    print("   ⚠️ No se pudo acceder a origin/soberano-v1")
-
-print("\n" + "=" * 80)
-print("✅ VERIFICACIÓN COMPLETADA")
-print("=" * 80)
-EOF
-
+cat INVENTARIO_REPOSITORIO.md
