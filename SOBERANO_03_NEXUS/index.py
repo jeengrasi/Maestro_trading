@@ -1,3 +1,4 @@
+from SOBERANO_03_NEXUS.core.guardian import verify_startup_requirements
 import os
 import logging
 from fastapi import FastAPI
@@ -7,6 +8,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Maestro-Nexus API")
+
+# 🛡️ PROTOCOLO DE HIERRO: Validación de arranque (Hard-Fail)
+verify_startup_requirements()
 
 # Incluir el router de Telegram
 app.include_router(telegram_router)

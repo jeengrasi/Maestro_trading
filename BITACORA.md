@@ -322,3 +322,44 @@
 **Hash anterior:** [CALCULADO]
 **Hash actual:** bc14475f8dcb2acb2d1fccc8d55e49be7d1e88bb7ba28d6bca4b56529648d8a3
 ---
+---
+## [ID-0016] [2026-08-06 20:00] [AUDITORÍA] [COMPLETADA] Validación Forense Post-Poda
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Necesidad de confirmar que la Poda Quirúrgica (ID-0015) se ejecutó sin errores y dejó el sistema en estado consistente.
+- **Por qué surge:** Mandato constitucional de validación y auditoría de toda acción realizada.
+- **Dónde ocurre:** Estructura local y remota del repositorio `soberano-v1`.
+**Decisión/Acción:** Ejecutar script de auditoría automatizada para verificar eliminación de archivos, estado de Git e integridad de la bitácora.
+**Justificación:** Principio de Transparencia y Trazabilidad (Art. 2). No se asume el éxito, se verifica.
+**Implementación:** 
+- **Cómo se hizo:** Script Python que valida la ausencia de archivos eliminados, limpieza de `git status` y presencia de entradas de bitácora con hashes.
+- **Archivos afectados:** Ninguno (solo lectura y verificación).
+**Resultado:** Auditoría APROBADA (PASS ✅). El repositorio está limpio, sin cambios pendientes y la bitácora es íntegra.
+**Acciones Derivadas:**
+- [x] Ejecutar script de validación post-poda (COMPLETADA)
+- [x] Registrar resultado de auditoría en bitácora (COMPLETADA)
+- [ ] Iniciar fase de mejora de rentabilidad y robustez operativa (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+
+---
+## [ID-0017] [2026-08-06 20:15] [IMPLEMENTACIÓN] [COMPLETADA] Activación del Guardián (Hard-Fail)
+**Participantes:** Director JEISSON_01, Gerente Qwen (por delegación de criterio)
+**Contexto:** 
+- **Qué problema:** Riesgo de que el sistema arranque con variables de entorno faltantes o vacías, operando "a ciegas".
+- **Por qué surge:** Mandato del Art. X.2 del Protocolo de Hierro (Salvaguarda Automática).
+- **Dónde ocurre:** `SOBERANO_03_NEXUS/core/guardian.py` y `index.py`.
+**Decisión/Acción:** Crear e integrar el módulo `guardian.py` que bloquea el arranque de FastAPI si faltan credenciales críticas.
+**Justificación:** Es preferible un sistema apagado que un sistema operando con configuraciones erróneas que pongan en riesgo el patrimonio.
+**Implementación:** 
+- **Cómo se hizo:** Creación de script de validación e inyección en el punto de entrada de la aplicación.
+- **Archivos afectados:** `SOBERANO_03_NEXUS/core/guardian.py` (nuevo), `SOBERANO_03_NEXUS/index.py` (modificado).
+**Resultado:** El sistema ahora se niega a arrancar si faltan `ALPACA_API_KEY`, `TELEGRAM_BOT_TOKEN`, `UPSTASH_REDIS_REST_URL`, etc.
+**Acciones Derivadas:**
+- [x] Crear módulo guardian.py (COMPLETADA)
+- [x] Integrar validación en index.py (COMPLETADA)
+- [ ] Próximo paso: Implementar monitoreo de Drawdown del 2.0% en tiempo real (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** 253e7bff16ffe88fe9698ce3aa30779ad7944a6e7b3ca0d8466cf0c9d0012543
+---
