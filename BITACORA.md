@@ -363,3 +363,64 @@
 **Hash anterior:** [CALCULADO]
 **Hash actual:** 253e7bff16ffe88fe9698ce3aa30779ad7944a6e7b3ca0d8466cf0c9d0012543
 ---
+---
+## [ID-0015-A] [2026-08-06 20:45] [AUDITORÍA] [COMPLETADA] Análisis Arquitectónico Previo a Modularización
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Necesidad de modularizar el sistema, pero evitando refactorizaciones a ciegas.
+- **Por qué surge:** El Director indicó correctamente que se debe verificar todo el código, mapear dependencias y proponer mejoras antes de ejecutar.
+- **Dónde ocurre:** Estructura completa de carpetas `SOBERANO_02_CORE` y `SOBERANO_03_NEXUS`.
+**Decisión/Acción:** Ejecutar script de análisis estático (AST) para generar un mapa de dependencias y una propuesta de arquitectura objetivo.
+**Justificación:** Principio de Prudencia y Trazabilidad. No se modifica el código sin un diagnóstico forense previo.
+**Implementación:** 
+- **Cómo se hizo:** Script Python de solo lectura que analiza tamaños de archivo, imports y genera un reporte de "Code Smells".
+- **Archivos afectados:** `PROPUESTA_DE_MODULARIZACION.md` (creado).
+**Resultado:** Diagnóstico completo generado. Se identificaron puntos de acoplamiento y se propuso una estructura de carpetas objetivo.
+**Acciones Derivadas:**
+- [x] Ejecutar análisis arquitectónico (COMPLETADA)
+- [ ] Director revisa `PROPUESTA_DE_MODULARIZACION.md` y aprueba el plan (PENDIENTE)
+- [ ] Ejecutar refactorización quirúrgica basada en el plan aprobado (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+---
+## [ID-0018] [2026-08-06 21:30] [INVENTARIO] [COMPLETADA] Inventario Total Seguro del Proyecto
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Necesidad de inventariar todos los archivos del proyecto para organizar y modularizar correctamente.
+- **Por qué surge:** Mandato del Director de tener evidencia completa antes de construir módulos.
+- **Dónde ocurre:** Repositorio completo bajo control de Git (rama soberano-v1).
+**Decisión/Acción:** Ejecutar script de inventario usando `git ls-files` para ignorar automáticamente archivos locales (.cache, .npm, .tor) y enfocarse solo en el código del proyecto.
+**Justificación:** Principio de Minimalismo y Seguridad. No se analiza basura local que no forma parte del repositorio.
+**Implementación:** 
+- **Cómo se hizo:** Script Python que itera sobre archivos versionados, extrae estadísticas y genera previews.
+- **Archivos afectados:** `INVENTARIO_COMPLETO.md` (creado), `ARBOL_PROYECTO.txt` (creado).
+**Resultado:** Inventario completo y limpio del proyecto real, listo para análisis de modularización.
+**Acciones Derivadas:**
+- [x] Ejecutar inventario seguro (COMPLETADA)
+- [ ] Director revisa INVENTARIO_COMPLETO.md (PENDIENTE)
+- [ ] Plan de modularización basado en evidencia real (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** [CALCULADO]
+---
+
+---
+## [ID-0019] [2026-08-06 22:00] [IMPLEMENTACIÓN] [COMPLETADA] Eliminación de Duplicados y Código Muerto
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** 
+- **Qué problema:** Existencia de archivos duplicados (`router.py`, `scheduler.py`) que generaban ambigüedad y riesgo de importar el módulo incorrecto.
+- **Por qué surge:** Auditoría forense de importaciones reveló código muerto y redundancias.
+- **Dónde ocurre:** `SOBERANO_03_NEXUS/autonomy/`, `SOBERANO_03_NEXUS/` (raíz).
+**Decisión/Acción:** Eliminar archivos sin importaciones activas y unificar `router.py` en `core/`.
+**Justificación:** Principio de Unicidad Documental y de Código. Un sistema profesional no tolera módulos duplicados.
+**Implementación:** 
+- **Cómo se hizo:** Script de solo lectura identificó dependencias. Se eliminó `scheduler.py` muerto y se unificó `router.py` en `core/`, actualizando `index.py`.
+- **Archivos afectados:** `scheduler.py` (eliminado), `router.py` raíz (eliminado), `index.py` (actualizado), `scripts/` (creado para utilidades).
+**Resultado:** Estructura de código limpia, sin ambigüedades y 100% predecible.
+**Acciones Derivadas:**
+- [x] Ejecutar auditoría de importaciones (COMPLETADA)
+- [x] Eliminar duplicados y código muerto (COMPLETADA)
+- [ ] Revisar y aprobar la estructura final de módulos Python (PENDIENTE)
+**Hash anterior:** [CALCULADO]
+**Hash actual:** a46d6a97849c7b76ffde2210963e62961906c5ea66208214dbf4e731ecfba0c5
+---

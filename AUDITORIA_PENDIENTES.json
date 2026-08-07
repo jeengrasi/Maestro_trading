@@ -1,0 +1,99 @@
+{
+  "fecha": "2026-08-07T04:54:28.248857",
+  "completadas": [
+    [
+      "ID-0002",
+      "Implementar health check",
+      "COMPLETADA",
+      "diagnostics.py existe con endpoints"
+    ],
+    [
+      "ID-0004",
+      "Documentar en Constitución como restricción",
+      "COMPLETADA",
+      "Restricción presente"
+    ],
+    [
+      "ID-0005",
+      "Activar modo de ejecución /autorizar 4h",
+      "COMPLETADA",
+      "Comando existe"
+    ],
+    [
+      "ID-0008",
+      "Definir Drawdown Máximo Diario",
+      "COMPLETADA",
+      "Lógica presente"
+    ],
+    [
+      "ID-0009",
+      "Crear bitacora.py",
+      "COMPLETADA",
+      "Archivo existe"
+    ],
+    [
+      "ID-0009",
+      "Establecer protocolo de consulta obligatoria",
+      "COMPLETADA",
+      "Protocolo activo"
+    ],
+    [
+      "ID-0011",
+      "Revisar Top 10 archivos pesados",
+      "COMPLETADA",
+      "Poda aplicada"
+    ],
+    [
+      "ID-0011",
+      "Rediseñar script de inventario seguro",
+      "COMPLETADA",
+      "Hecho en ID-0013"
+    ],
+    [
+      "ID-0013",
+      "Revisar inventario duplicidades",
+      "COMPLETADA",
+      "Hecho en ID-0014/0015"
+    ],
+    [
+      "ID-0014",
+      "Poda quirúrgica",
+      "COMPLETADA",
+      "Ejecutada en ID-0015"
+    ]
+  ],
+  "en_progreso": [
+    [
+      "ID-0016",
+      "Mejora de rentabilidad y robustez",
+      "EN_PROGRESO",
+      "Guardián activo"
+    ]
+  ],
+  "pendientes": [
+    [
+      "ID-0008",
+      "Ratificación final del Director",
+      "PENDIENTE",
+      "Requiere decisión humana"
+    ],
+    [
+      "ID-0013",
+      "Unificación de módulos duplicados",
+      "PENDIENTE",
+      "scheduler.py y router.py duplicados"
+    ],
+    [
+      "ID-0015",
+      "Modularización de index.py",
+      "PENDIENTE",
+      "160 líneas"
+    ],
+    [
+      "ID-0017",
+      "Monitoreo Drawdown 2.0%",
+      "PENDIENTE",
+      ""
+    ]
+  ]
+}
