@@ -13,9 +13,8 @@
 **Módulos:** `laboratorio/` | `trading/` | `providers/` | `monitoring/`
 
 ---
-## ⏳ FASE ACTIVA: FASE 1 - LABORATORIO (DÍA 2)
-- **Objetivo Actual:** Construir `experiment_tracker.py` y agregar una segunda estrategia (RSI + Reversión) para comparar y declarar ganador.
-- **Deadline:** 2026-08-17 (Timebox de 7 días).
+## ⏳ PENDIENTES REALES (Única fuente de verdad para la IA)
+1. **[FASE 1 - DÍA 2]** Construir `experiment_tracker.py` y agregar una segunda estrategia (RSI + Reversión) para comparar y declarar ganador. (Deadline: 2026-08-17).
 
 ---
 ## ✅ ÚLTIMO HECHO CONFIRMADO
