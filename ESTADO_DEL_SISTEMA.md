@@ -20,3 +20,7 @@
 ## ✅ ÚLTIMO HECHO CONFIRMADO
 - Día 1 del Laboratorio completado con éxito: Retorno simulado del 18.87% en AAPL con estrategia de Cruce de Medias.
 - Arquitectura de 5 fases y 4 módulos registrada oficialmente en BITACORA.md (ID-0026).
+
+
+## 🧠 PROTOCOLO DE MEMORIA ACTIVO
+- El sistema utiliza `RESUMEN_CHECKPOINT_MEMORIA.md` para cargar el historial de forma eficiente, leyendo solo este resumen + las últimas 10 actas detalladas.

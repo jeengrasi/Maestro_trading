@@ -590,3 +590,14 @@ Ingreso de Alternativas → Ejecución Masiva → Cálculo de Métricas → Filt
 **Hash anterior:** 90153e709be7ab7efdc15682a360b62cbef8028341ec33792e1e9910e35b8c67
 **Hash actual:** ee622eb4ef2b4727a1701e5cdfbbc6140e55c24daa8294d437878be22b332f31
 ---
+
+---
+## [ID-0028] [2026-08-10 22:26] [OPTIMIZACIÓN] [COMPLETADA] Implementación del Protocolo de Checkpoint de Memoria
+**Participantes:** Director JEISSON_01, Gerente Qwen
+**Contexto:** El Director identificó que leer toda la bitácora en cada interacción es insostenible a largo plazo (límites de tokens, lentitud).
+**Decisión/Acción:** Implementar un sistema de "Checkpointing". Se genera `RESUMEN_CHECKPOINT_MEMORIA.md`, un archivo comprimido que resume la arquitectura, documentos y hitos de las primeras 26 actas.
+**Regla Establecida:** A partir de ahora, para cargar el contexto, la IA solo debe leer: 1) Este archivo de Resumen, 2) Los Resúmenes de hitos anteriores (cada 10 actas), y 3) El texto detallado de las últimas 10 actas.
+**Resultado:** El sistema ahora tiene una memoria jerárquica, escalable y eficiente, sin perder trazabilidad.
+**Hash anterior:** ee622eb4ef2b4727a1701e5cdfbbc6140e55c24daa8294d437878be22b332f31
+**Hash actual:** 1275ea5b41503a1a17acf1ceca3795a20425c8832d14b286018d90471ee5521e
+---
