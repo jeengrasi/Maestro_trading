@@ -1,12 +1,23 @@
 # 📊 ESTADO VIGENTE DEL SISTEMA MAESTRO-NEXUS
-**Última Actualización:** 2026-08-06 23:30
-**Versión de Constitución:** V6.1 (APROBADA Y VIGENTE)
+**Última Actualización:** 2026-08-11
+**Misión:** Libertad Financiera Multi-Activo (Protección y Escalamiento).
 
+---
+## 🗺️ ARQUITECTURA OFICIAL (5 Fases Macro + 4 Módulos)
+**FASE 1 - Laboratorio de Investigación (EN CURSO):** Motor de investigación matemática independiente. Prueba múltiples algoritmos en paralelo. Promueve al ganador.
+**FASE 2 - Motor de Ejecución y Riesgo:** Conecta el ganador al bróker con frenos de seguridad (Kelly, Circuit Breaker 2%).
+**FASE 3 - Monitoreo y Veeduría:** Dashboard + Telegram desacoplados.
+**FASE 4 - Multi-Activo:** Patrón Adaptador para Cripto/Forex/Derivados.
+**FASE 5 - Inteligencia Autónoma:** Agente asíncrono de optimización continua.
+
+**Módulos:** `laboratorio/` | `trading/` | `providers/` | `monitoring/`
+
+---
+## ⏳ FASE ACTIVA: FASE 1 - LABORATORIO (DÍA 2)
+- **Objetivo Actual:** Construir `experiment_tracker.py` y agregar una segunda estrategia (RSI + Reversión) para comparar y declarar ganador.
+- **Deadline:** 2026-08-17 (Timebox de 7 días).
+
+---
 ## ✅ ÚLTIMO HECHO CONFIRMADO
-- Sistema de memoria autónoma blindado (`ESTADO_DEL_SISTEMA.md` + `validar_memoria.py`). Deuda documental saldada (ID-0020).
-
-## ⏳ PENDIENTE REAL ÚNICO (Prioridad Máxima)
-1. **[ID-0017]** Implementación del Monitoreo de Drawdown 2.0% con Circuit Breaker Institucional (Sensor de equidad en tiempo real, bloqueo en Redis y reinicio auditado).
-
-## 🚀 PRÓXIMO PASO INMEDIATO
-- Codificar y probar el módulo `check_drawdown()` en `risk_manager.py`.
+- Día 1 del Laboratorio completado con éxito: Retorno simulado del 18.87% en AAPL con estrategia de Cruce de Medias.
+- Arquitectura de 5 fases y 4 módulos registrada oficialmente en BITACORA.md (ID-0026).
